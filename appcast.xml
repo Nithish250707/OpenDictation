@@ -7,5 +7,18 @@
     <language>en</language>
     <!-- Items are appended per release by Scripts/release.sh; see RELEASING.md.
          Enclosure URLs point at GitHub Release assets. -->
+    <item>
+      <title>0.1.1</title>
+      <pubDate>Sat, 19 Jul 2026 20:30:00 +0530</pubDate>
+      <sparkle:version>2</sparkle:version>
+      <sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <link>https://github.com/Nithish250707/OpenDictation/releases/tag/v0.1.1</link>
+      <enclosure
+        url="https://github.com/Nithish250707/OpenDictation/releases/download/v0.1.1/OpenDictation-0.1.1.dmg"
+        sparkle:edSignature="TECDG2COt27g94iNXwKW9oxUfRLtnCmULg9FZWsCY5Fkujok8hOIaNmB3e/TnlGU2rDIKHc7DC69KFA25O3oCg=="
+        length="2420319"
+        type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
