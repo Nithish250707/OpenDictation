@@ -23,7 +23,8 @@ final class DictationController {
             pasteboard: dependencies.pasteboard,
             paste: dependencies.paste,
             accessibility: dependencies.accessibility,
-            settings: dependencies.settings
+            settings: dependencies.settings,
+            history: dependencies.history
         )
         hotkeyManager.onHotkeyPressed = { [weak self] in
             self?.toggleDictation()

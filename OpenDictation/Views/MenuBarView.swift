@@ -4,6 +4,8 @@ import SwiftUI
 struct MenuBarView: View {
     let controller: DictationController
 
+    @Environment(\.openWindow) private var openWindow
+
     var body: some View {
         Button {
             controller.toggleDictation()
@@ -15,6 +17,14 @@ struct MenuBarView: View {
         }
 
         Divider()
+
+        Button {
+            openWindow(id: WindowID.history)
+            // Menu-bar-only apps aren't active; activate so the window fronts.
+            NSApplication.shared.activate()
+        } label: {
+            Label("History…", systemImage: "clock.arrow.circlepath")
+        }
 
         SettingsLink {
             Label("Settings…", systemImage: "gearshape")

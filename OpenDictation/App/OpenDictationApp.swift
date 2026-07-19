@@ -21,5 +21,18 @@ struct OpenDictationApp: App {
         Settings {
             SettingsView(dependencies: composition.dependencies)
         }
+
+        Window("History", id: WindowID.history) {
+            HistoryView(
+                history: composition.dependencies.history,
+                pasteboard: composition.dependencies.pasteboard
+            )
+        }
+        .defaultSize(width: 560, height: 460)
     }
+}
+
+/// Scene identifiers used with `openWindow`.
+enum WindowID {
+    static let history = "history"
 }

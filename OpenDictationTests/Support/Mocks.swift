@@ -115,6 +115,31 @@ final class MockPermissionStatus: PermissionStatusChecking {
     var accessibilityGranted = false
 }
 
+@MainActor
+final class MockHistoryStore: HistoryStoring {
+    private(set) var saved: [Transcript] = []
+    var saveError: Error?
+
+    func save(_ transcript: Transcript) throws {
+        if let saveError { throw saveError }
+        saved.append(transcript)
+    }
+
+    func records(matching query: String?) throws -> [TranscriptionRecord] {
+        saved
+            .filter { query.map($0.text.localizedStandardContains) ?? true }
+            .map(TranscriptionRecord.init)
+    }
+
+    func delete(_ record: TranscriptionRecord) throws {
+        saved.removeAll { $0.text == record.text }
+    }
+
+    func deleteAll() throws {
+        saved.removeAll()
+    }
+}
+
 extension UserDefaults {
     /// A unique, empty defaults suite per call so settings tests never touch
     /// the user's real preferences or each other.

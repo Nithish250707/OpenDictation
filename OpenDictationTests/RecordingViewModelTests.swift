@@ -12,6 +12,7 @@ struct RecordingViewModelTests {
         let permission = MockAccessibilityPermission()
         let synthesizer = SpyKeyEventSynthesizer()
         let settings = SettingsStore(defaults: .ephemeral())
+        let history = MockHistoryStore()
         let viewModel: RecordingViewModel
 
         init(
@@ -31,7 +32,8 @@ struct RecordingViewModelTests {
                 pasteboard: pasteboard,
                 paste: PasteService(pasteboard: pasteboard, permission: permission, synthesizer: synthesizer),
                 accessibility: permission,
-                settings: settings
+                settings: settings,
+                history: history
             )
         }
 
@@ -126,6 +128,37 @@ struct RecordingViewModelTests {
             return
         }
         #expect(error == .missingAPIKey)
+    }
+
+    // MARK: - History
+
+    @Test func successfulTranscriptionIsSavedToHistory() async {
+        let harness = Harness(provider: .returning("Saved for later"))
+
+        await harness.dictate()
+
+        #expect(harness.history.saved.map(\.text) == ["Saved for later"])
+    }
+
+    @Test func failedTranscriptionIsNotSavedToHistory() async {
+        let harness = Harness(provider: .failing(.networkUnavailable))
+
+        await harness.dictate()
+
+        #expect(harness.history.saved.isEmpty)
+    }
+
+    @Test func historySaveFailureStillDeliversTranscript() async {
+        let harness = Harness(provider: .returning("Still delivered"))
+        harness.history.saveError = AppError.providerError(message: "disk full")
+
+        await harness.dictate()
+
+        guard case .transcript(let transcript) = harness.viewModel.state else {
+            Issue.record("Expected .transcript, got \(harness.viewModel.state)")
+            return
+        }
+        #expect(transcript.text == "Still delivered")
     }
 
     // MARK: - Clipboard & paste

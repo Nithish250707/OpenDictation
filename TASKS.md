@@ -78,12 +78,14 @@ Working checklist per milestone. Checked = done and committed.
 - [x] Live permission status (mic + Accessibility) with deep links, polled while visible
 - [x] 25 new tests (67 total); build, zero warnings, docs, commit
 
-## Milestone 8 — History
+## Milestone 8 — History ✅
 
-- [ ] SwiftData `TranscriptionRecord` + `HistoryService`
-- [ ] Auto-save on successful transcription
-- [ ] History window: list, search, copy, delete
-- [ ] Build, zero warnings, commit
+- [x] SwiftData `TranscriptionRecord` + `HistoryService` behind `HistoryStoring` (injectable container, in-memory fallback if the store can't open)
+- [x] Auto-save on successful transcription — never blocks the flow; failures log only
+- [x] History window scene: newest-first list, live search, per-row copy (with feedback) and delete, Clear All with confirmation, empty states
+- [x] History… menu item (window activation for a menu-bar-only app)
+- [x] 13 new tests: service round-trips/search/sort, view model, auto-save behavior — 80 total
+- [x] Build, zero warnings, tests green, commit
 
 ## Milestone 9 — Testing
 

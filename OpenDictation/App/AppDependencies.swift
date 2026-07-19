@@ -15,6 +15,7 @@ struct AppDependencies {
     let transcription: TranscriptionService
     let loginItems: any LoginItemManaging
     let permissionStatus: any PermissionStatusChecking
+    let history: any HistoryStoring
 
     static func live() -> AppDependencies {
         let settings = SettingsStore()
@@ -32,7 +33,8 @@ struct AppDependencies {
             registry: registry,
             transcription: TranscriptionService(registry: registry, keyStore: keyStore, settings: settings),
             loginItems: LoginItemManager(),
-            permissionStatus: SystemPermissionStatus(accessibility: accessibility)
+            permissionStatus: SystemPermissionStatus(accessibility: accessibility),
+            history: HistoryService.live()
         )
     }
 }

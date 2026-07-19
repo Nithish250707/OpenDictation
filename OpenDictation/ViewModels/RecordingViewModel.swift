@@ -26,6 +26,7 @@ final class RecordingViewModel {
     private let paste: any PasteServicing
     private let accessibility: any AccessibilityPermissionChecking
     private let settings: SettingsStore
+    private let history: any HistoryStoring
     private var meterTask: Task<Void, Never>?
 
     init(
@@ -34,7 +35,8 @@ final class RecordingViewModel {
         pasteboard: any PasteboardServicing,
         paste: any PasteServicing,
         accessibility: any AccessibilityPermissionChecking,
-        settings: SettingsStore
+        settings: SettingsStore,
+        history: any HistoryStoring
     ) {
         self.audio = audio
         self.transcription = transcription
@@ -42,6 +44,7 @@ final class RecordingViewModel {
         self.paste = paste
         self.accessibility = accessibility
         self.settings = settings
+        self.history = history
         self.levels = Array(repeating: 0, count: Self.waveformBarCount)
     }
 
@@ -101,6 +104,13 @@ final class RecordingViewModel {
             // user can ⌘V immediately, even before touching the popup.
             if settings.autoCopy {
                 pasteboard.copy(transcript.text)
+            }
+            // History must never block the dictation flow; a failed save is
+            // logged and the transcript still reaches the user.
+            do {
+                try history.save(transcript)
+            } catch {
+                Log.app.error("Couldn't save transcript to history: \(error.localizedDescription)")
             }
             state = .transcript(transcript)
             if settings.autoPaste {
