@@ -1,0 +1,15 @@
+# Xcode build output
+build/
+DerivedData/
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# macOS
+.DS_Store
+
+# Swift Package Manager (not used, but keep clones clean)
+.build/
+.swiftpm/
