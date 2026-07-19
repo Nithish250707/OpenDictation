@@ -6,10 +6,14 @@ protocol APIKeyStoring: Sendable {
     func save(_ key: String, for providerID: String) throws
     func key(for providerID: String) throws -> String?
     func deleteKey(for providerID: String) throws
+
+    /// Presence check for UI — avoids handing the key material itself around.
+    /// A protocol requirement (not just an extension) so implementations can
+    /// answer it without reading the protected secret at all.
+    func hasKey(for providerID: String) -> Bool
 }
 
 extension APIKeyStoring {
-    /// Presence check for UI — avoids handing the key material itself around.
     func hasKey(for providerID: String) -> Bool {
         (try? key(for: providerID)) != nil
     }

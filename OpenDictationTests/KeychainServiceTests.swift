@@ -14,6 +14,8 @@ struct KeychainServiceTests {
 
         try keychain.save("sk-first", for: providerID)
         #expect(try keychain.key(for: providerID) == "sk-first")
+        // Attributes-only presence check agrees with the protected read.
+        #expect(keychain.hasKey(for: providerID))
 
         try keychain.save("sk-updated", for: providerID)
         #expect(try keychain.key(for: providerID) == "sk-updated")

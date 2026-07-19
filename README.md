@@ -80,6 +80,10 @@ xcodebuild -project OpenDictation.xcodeproj -scheme OpenDictation test
 
 Permissions: **Microphone** (required, requested on first recording) and **Accessibility** (optional — only needed for the Paste action, which synthesizes ⌘V).
 
+## Troubleshooting
+
+**"OpenDictation wants to use your confidential information stored in your keychain"** — you should see this at most once per launch, and on release builds at most once ever. The prompt appears when the app's code signature doesn't match the keychain item's access list. During *development* this is expected: ad-hoc (unsigned) builds get a new signature on every rebuild, so macOS re-asks and "Always Allow" cannot stick. Click Allow, or re-save the key in Settings → Transcription (which re-creates the item under the current build's signature). Properly signed release builds have a stable signature and don't churn. The app performs at most one protected keychain read per provider per launch; menu and Settings presence checks use attribute-only queries that never trigger the prompt.
+
 ## Architecture
 
 Native SwiftUI/AppKit, MVVM, protocol-oriented services with constructor injection, Swift 6 strict concurrency. Every service lives behind a protocol with a mock in the test suite (88 tests).

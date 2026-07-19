@@ -22,7 +22,9 @@ struct AppDependencies {
         let settings = SettingsStore()
         let pasteboard = PasteboardService()
         let accessibility = AccessibilityPermission()
-        let keyStore = KeychainService()
+        // Cached so the protected Keychain read happens at most once per
+        // provider per launch (see CachedAPIKeyStore for the why).
+        let keyStore = CachedAPIKeyStore(wrapping: KeychainService())
         let registry = ProviderRegistry.live()
         return AppDependencies(
             settings: settings,

@@ -5,6 +5,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+- Keychain prompt audit: the app was performing a protected Keychain read on every menu open, every Settings visit, and every transcription — multiplying macOS "wants to use your confidential information" prompts, which recur across development rebuilds because ad-hoc signing changes the code signature the item's ACL was granted to. Now `CachedAPIKeyStore` caches the key in process memory after the first successful read (≤1 protected read per provider per launch; invalidated by save/delete, never persisted), and presence checks use attribute-only Keychain queries that never touch the protected secret, so they can't prompt at all. Root cause and guidance documented in the README's Troubleshooting section.
+
 ### Added
 - Milestone 12 — Distribution: Sparkle 2 auto-updates fed from GitHub Releases (EdDSA-signed appcast served from the repo; updater initialized lazily so tests never trigger it), "Check for Updates…" in the menu bar and an Updates section in Settings → General; `Scripts/release.sh` builds a DMG via `hdiutil` with optional Developer ID signing and notarization (`CODESIGN_IDENTITY` / `NOTARY_PROFILE`); hardened-runtime microphone entitlement so notarized builds can record; versions bumped to 0.2.0 (build 2); RELEASING.md maintainer guide. Sparkle is the project's first and only dependency — there is no native framework for non-App-Store auto-updates.
 

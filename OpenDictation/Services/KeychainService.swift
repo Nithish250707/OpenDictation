@@ -43,6 +43,18 @@ struct KeychainService: APIKeyStoring {
         }
     }
 
+    /// Presence check via an attributes-only query. Keychain ACLs protect the
+    /// secret *data*, not the item's attributes — so this never triggers the
+    /// "wants to access confidential information" prompt.
+    func hasKey(for providerID: String) -> Bool {
+        var query = baseQuery(for: providerID)
+        query[kSecReturnAttributes as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+
+        var result: CFTypeRef?
+        return SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess
+    }
+
     func deleteKey(for providerID: String) throws {
         let status = SecItemDelete(baseQuery(for: providerID) as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
