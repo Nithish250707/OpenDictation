@@ -5,6 +5,7 @@ import SwiftUI
 /// `FloatingPanelManager`.
 struct RecordingPopupView: View {
     let viewModel: RecordingViewModel
+    let settings: SettingsStore
     let onDismiss: () -> Void
 
     var body: some View {
@@ -25,7 +26,7 @@ struct RecordingPopupView: View {
             }
         }
         .padding(24)
-        .frame(width: 340)
+        .frame(width: settings.panelSize.width)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -56,7 +57,7 @@ struct RecordingPopupView: View {
             }
             RecordingTimerView(elapsed: viewModel.elapsed)
             WaveformView(levels: viewModel.levels)
-            Text("Press ⌥ Space to stop")
+            Text("Press \(settings.shortcut.display) to stop")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -96,9 +97,11 @@ struct RecordingPopupView: View {
             .padding(10)
             .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
-            Label("Copied to clipboard", systemImage: "checkmark.circle")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            if settings.autoCopy {
+                Label("Copied to clipboard", systemImage: "checkmark.circle")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
 
             HStack(spacing: 8) {
                 Button {

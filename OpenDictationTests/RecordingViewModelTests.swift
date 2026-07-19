@@ -11,15 +11,18 @@ struct RecordingViewModelTests {
         let pasteboard = SpyPasteboard()
         let permission = MockAccessibilityPermission()
         let synthesizer = SpyKeyEventSynthesizer()
+        let settings = SettingsStore(defaults: .ephemeral())
         let viewModel: RecordingViewModel
 
         init(
             provider: MockTranscriptionProvider = .returning("Hello"),
             apiKeys: [String: String] = ["mock": "sk-test"]
         ) {
+            settings.providerID = provider.id
             let transcription = TranscriptionService(
-                provider: provider,
+                registry: ProviderRegistry(providers: [provider]),
                 keyStore: InMemoryAPIKeyStore(keys: apiKeys),
+                settings: settings,
                 environment: [:]
             )
             viewModel = RecordingViewModel(
@@ -27,7 +30,8 @@ struct RecordingViewModelTests {
                 transcription: transcription,
                 pasteboard: pasteboard,
                 paste: PasteService(pasteboard: pasteboard, permission: permission, synthesizer: synthesizer),
-                accessibility: permission
+                accessibility: permission,
+                settings: settings
             )
         }
 
@@ -132,6 +136,43 @@ struct RecordingViewModelTests {
         await harness.dictate()
 
         #expect(harness.pasteboard.copiedStrings == ["Auto-copied"])
+    }
+
+    @Test func autoCopyOffLeavesClipboardAlone() async {
+        let harness = Harness(provider: .returning("Not copied"))
+        harness.settings.autoCopy = false
+
+        await harness.dictate()
+
+        #expect(harness.pasteboard.copiedStrings.isEmpty)
+        if case .transcript = harness.viewModel.state {} else {
+            Issue.record("Expected .transcript, got \(harness.viewModel.state)")
+        }
+    }
+
+    @Test func autoPasteOnPastesWithoutUserAction() async {
+        let harness = Harness(provider: .returning("Auto-pasted"))
+        harness.settings.autoPaste = true
+        harness.permission.isGranted = true
+
+        await harness.dictate()
+
+        #expect(harness.synthesizer.postCount == 1)
+        #expect(harness.viewModel.justPasted)
+    }
+
+    @Test func autoPasteWithoutPermissionShowsGuidanceInsteadOfFailing() async {
+        let harness = Harness(provider: .returning("Auto-pasted"))
+        harness.settings.autoPaste = true
+        harness.permission.isGranted = false
+
+        await harness.dictate()
+
+        #expect(harness.synthesizer.postCount == 0)
+        #expect(harness.viewModel.needsAccessibilityPermission)
+        if case .transcript = harness.viewModel.state {} else {
+            Issue.record("Expected to stay in .transcript, got \(harness.viewModel.state)")
+        }
     }
 
     @Test func manualCopyCopiesAgain() async {

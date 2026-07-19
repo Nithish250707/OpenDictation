@@ -10,8 +10,8 @@
 | 4 | OpenAI transcription — provider protocol, multipart upload, error handling | ✅ Done |
 | 5 | Transcript UI — transcript state, Copy / Retry / Done | ✅ Done |
 | 6 | Clipboard & paste — auto-copy, paste-into-focused-app, ⌘V synthesis, Accessibility guidance | ✅ Done |
-| 7 | Settings — API key (Keychain), model picker, shortcut, launch at login | ⏳ Next |
-| 8 | History — SwiftData store, history window, search, delete | Planned |
+| 7 | Settings — provider/model/language, Keychain API key, shortcut, launch at login, behavior & panel preferences, live permission status | ✅ Done |
+| 8 | History — SwiftData store, history window, search, delete | ⏳ Next |
 | 9 | Testing — mocks for all services, view model state machine tests | Planned |
 | 10 | Open source polish — LICENSE audit, screenshots, CHANGELOG, refactor sweep | Planned |
 

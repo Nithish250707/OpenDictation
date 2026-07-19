@@ -25,6 +25,7 @@ final class RecordingViewModel {
     private let pasteboard: any PasteboardServicing
     private let paste: any PasteServicing
     private let accessibility: any AccessibilityPermissionChecking
+    private let settings: SettingsStore
     private var meterTask: Task<Void, Never>?
 
     init(
@@ -32,13 +33,15 @@ final class RecordingViewModel {
         transcription: TranscriptionService,
         pasteboard: any PasteboardServicing,
         paste: any PasteServicing,
-        accessibility: any AccessibilityPermissionChecking
+        accessibility: any AccessibilityPermissionChecking,
+        settings: SettingsStore
     ) {
         self.audio = audio
         self.transcription = transcription
         self.pasteboard = pasteboard
         self.paste = paste
         self.accessibility = accessibility
+        self.settings = settings
         self.levels = Array(repeating: 0, count: Self.waveformBarCount)
     }
 
@@ -96,8 +99,13 @@ final class RecordingViewModel {
             deleteAudioFile(at: audioFileURL)
             // The finished transcript goes straight to the clipboard so the
             // user can ⌘V immediately, even before touching the popup.
-            pasteboard.copy(transcript.text)
+            if settings.autoCopy {
+                pasteboard.copy(transcript.text)
+            }
             state = .transcript(transcript)
+            if settings.autoPaste {
+                pasteTranscript()
+            }
         } catch {
             guard isStillTranscribing(audioFileURL) else { return }
             let appError = (error as? AppError) ?? .providerError(message: error.localizedDescription)

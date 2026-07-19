@@ -1,46 +1,57 @@
 import Foundation
 
-/// Orchestrates a transcription request: resolves the API key, assembles the
-/// configuration, and hands off to the active provider.
+/// Orchestrates a transcription request: resolves the active provider and
+/// model from Settings, resolves the API key, and hands off to the provider.
 @MainActor
 final class TranscriptionService {
-    private let provider: any TranscriptionProvider
+    private let registry: ProviderRegistry
     private let keyStore: any APIKeyStoring
+    private let settings: SettingsStore
     private let environment: [String: String]
 
     /// - Parameter environment: injectable for tests; defaults to the process
     ///   environment so developers can smoke-test headlessly (see `resolveAPIKey`).
     init(
-        provider: any TranscriptionProvider,
+        registry: ProviderRegistry,
         keyStore: any APIKeyStoring,
+        settings: SettingsStore,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) {
-        self.provider = provider
+        self.registry = registry
         self.keyStore = keyStore
+        self.settings = settings
         self.environment = environment
     }
 
     func transcribe(audioFileURL: URL) async throws -> Transcript {
-        guard let apiKey = resolveAPIKey(),
+        let provider = registry.provider(id: settings.providerID) ?? registry.default
+
+        guard let apiKey = resolveAPIKey(for: provider.id),
               !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw AppError.missingAPIKey
         }
 
-        // Model becomes user-selectable when Settings lands in Milestone 7.
+        // A persisted model can go stale (provider switched, model retired);
+        // fall back to the provider's default rather than failing the request.
+        let model = provider.supportedModels.contains(settings.model)
+            ? settings.model
+            : provider.defaultModel
+
         let configuration = TranscriptionConfiguration(
             apiKey: apiKey,
-            model: OpenAITranscriptionProvider.defaultModel
+            model: model,
+            language: settings.languageCode
         )
         return try await provider.transcribe(audioFileURL: audioFileURL, configuration: configuration)
     }
 
     /// The Keychain is the real store. The environment override exists purely
     /// for development/CI, where seeding a keychain isn't practical.
-    private func resolveAPIKey() -> String? {
+    private func resolveAPIKey(for providerID: String) -> String? {
         if let key = environment["OPENDICTATION_OPENAI_API_KEY"] ?? environment["OPENAI_API_KEY"],
-           !key.isEmpty {
+           !key.isEmpty, providerID == "openai" {
             return key
         }
-        return try? keyStore.key(for: provider.id)
+        return try? keyStore.key(for: providerID)
     }
 }

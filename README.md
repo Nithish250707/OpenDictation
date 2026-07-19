@@ -14,6 +14,7 @@ Press a shortcut anywhere on your Mac, speak naturally, and get beautifully form
 - 📋 Copy, or paste straight into the app you were typing in
 - 🕘 Automatic transcription history
 - 🔐 API key stored only in the Apple Keychain — never on disk, never logged
+- ⚙️ Native Settings: provider & model, language, global shortcut, auto-copy/auto-paste, panel appearance, live permission status
 - 🚀 Launch at login, menu bar native, light & dark mode
 
 ## Requirements

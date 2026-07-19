@@ -5,11 +5,12 @@ import Foundation
 /// (`POST /v1/audio/transcriptions`, multipart/form-data).
 struct OpenAITranscriptionProvider: TranscriptionProvider {
     static let defaultModel = "gpt-4o-transcribe"
-    /// Models known to work with this endpoint; Settings surfaces these.
-    static let supportedModels = ["gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"]
 
     let id = "openai"
     let displayName = "OpenAI"
+    var defaultModel: String { Self.defaultModel }
+    /// Models known to work with this endpoint; Settings surfaces these.
+    let supportedModels = ["gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"]
 
     private let endpoint = URL(string: "https://api.openai.com/v1/audio/transcriptions")!
     private let session: URLSession

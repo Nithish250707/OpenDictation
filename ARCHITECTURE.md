@@ -38,7 +38,11 @@ Open Dictation is a native SwiftUI menu bar app using **MVVM**, **protocol-orien
 | `KeychainService` | Service | API key storage via `SecItem*` — never UserDefaults, never logged |
 | `PasteboardService` | Service | Copy to `NSPasteboard`; paste = synthesized ⌘V `CGEvent` (Accessibility permission, graceful copy-only fallback) |
 | `HistoryService` | Service | SwiftData `TranscriptionRecord` store in Application Support |
-| `LoginItemManager` | Manager | `SMAppService.mainApp` |
+| `SettingsStore` | Service | Single source of truth for preferences (`@Observable`, UserDefaults-backed, injectable suite). API keys never live here |
+| `ProviderRegistry` | Provider | Catalog of installed providers; Settings, the model picker, and the pipeline all read from it |
+| `LoginItemManager` | Manager | `SMAppService.mainApp` behind `LoginItemManaging` |
+| `SystemPermissionStatus` | Service | Non-prompting live permission readout (mic + Accessibility) for Settings |
+| `AppComposition` | App | Builds `AppDependencies` + `DictationController` once; shared by all scenes |
 
 ## Recording state machine
 

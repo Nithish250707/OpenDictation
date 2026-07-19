@@ -7,11 +7,17 @@ import SwiftUI
 /// itself, which is why this thin AppKit wrapper exists.
 @MainActor
 final class FloatingPanelManager {
+    private let settings: SettingsStore
     private var panel: NSPanel?
+
+    init(settings: SettingsStore) {
+        self.settings = settings
+    }
 
     func show<Content: View>(@ViewBuilder content: () -> Content) {
         let panel = self.panel ?? makePanel()
         self.panel = panel
+        panel.appearance = Self.appearance(for: settings.panelAppearance)
 
         let hosting = NSHostingView(rootView: content())
         // Let SwiftUI drive the window size as the popup's state changes.
@@ -25,7 +31,15 @@ final class FloatingPanelManager {
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.18
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            panel.animator().alphaValue = 1
+            panel.animator().alphaValue = settings.panelOpacity
+        }
+    }
+
+    private static func appearance(for mode: PanelAppearanceMode) -> NSAppearance? {
+        switch mode {
+        case .system: nil
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
         }
     }
 

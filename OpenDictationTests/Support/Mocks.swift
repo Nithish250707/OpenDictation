@@ -32,8 +32,10 @@ final class MockAudioRecording: AudioRecording {
 }
 
 struct MockTranscriptionProvider: TranscriptionProvider {
-    let id = "mock"
-    let displayName = "Mock"
+    var id = "mock"
+    var displayName = "Mock"
+    var defaultModel = "mock-default"
+    var supportedModels = ["mock-default", "mock-advanced"]
     let handler: @Sendable (URL, TranscriptionConfiguration) throws -> Transcript
 
     func transcribe(audioFileURL: URL, configuration: TranscriptionConfiguration) async throws -> Transcript {
@@ -93,5 +95,33 @@ final class SpyKeyEventSynthesizer: KeyEventSynthesizing {
     func postCommandV() throws {
         if let error { throw error }
         postCount += 1
+    }
+}
+
+@MainActor
+final class MockLoginItemManager: LoginItemManaging {
+    var isEnabled = false
+    var nextError: Error?
+
+    func setEnabled(_ enabled: Bool) throws {
+        if let nextError { throw nextError }
+        isEnabled = enabled
+    }
+}
+
+@MainActor
+final class MockPermissionStatus: PermissionStatusChecking {
+    var microphone: PermissionState = .notDetermined
+    var accessibilityGranted = false
+}
+
+extension UserDefaults {
+    /// A unique, empty defaults suite per call so settings tests never touch
+    /// the user's real preferences or each other.
+    static func ephemeral() -> UserDefaults {
+        let suiteName = "opendictation-tests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        return defaults
     }
 }

@@ -63,13 +63,20 @@ Working checklist per milestone. Checked = done and committed.
 - [x] 13 new tests: paste service, clipboard service (real pasteboard, restored), permission flow, view model transitions — 42 total
 - [x] Build, zero warnings, tests green, commit
 
-## Milestone 7 — Settings
+## Milestone 7 — Settings ✅
 
-- [ ] `KeychainService` + masked API key field with validation
-- [ ] Model picker (gpt-4o-transcribe / gpt-4o-mini-transcribe / whisper-1)
-- [ ] Shortcut picker (curated presets)
-- [ ] Launch at login toggle (`SMAppService`)
-- [ ] Build, zero warnings, commit
+- [x] `SettingsStore` — @Observable, UserDefaults-backed, injectable suite for tests
+- [x] Four-tab native Settings window (General / Transcription / Appearance / Permissions), grouped forms, SF Symbols, subtle animations
+- [x] API key add/replace/remove with validation via `APIKeyViewModel` (Keychain only; stored keys never displayed)
+- [x] `ProviderRegistry` + provider protocol gains `defaultModel` / `supportedModels` — future providers are one file + one registry line
+- [x] Per-provider model picker; stale model falls back to provider default
+- [x] Language picker (16 languages + auto-detect) wired into requests
+- [x] Shortcut picker (six curated presets), re-registered live via observation
+- [x] Launch at login (`SMAppService` behind `LoginItemManaging`)
+- [x] Auto-copy / auto-paste toggles honored by `RecordingViewModel`
+- [x] Panel size / opacity / appearance applied by `FloatingPanelManager` + live preview
+- [x] Live permission status (mic + Accessibility) with deep links, polled while visible
+- [x] 25 new tests (67 total); build, zero warnings, docs, commit
 
 ## Milestone 8 — History
 

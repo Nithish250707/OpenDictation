@@ -13,10 +13,21 @@ protocol TranscriptionProvider: Sendable {
     var id: String { get }
     /// Human-readable name for Settings, e.g. "OpenAI".
     var displayName: String { get }
+    /// Model used when the user hasn't chosen one (or their choice went stale).
+    var defaultModel: String { get }
+    /// Models Settings offers for this provider.
+    var supportedModels: [String] { get }
     /// Transcribes the audio file at `url`.
     /// - Throws: `AppError` describing what went wrong in user-presentable terms.
     func transcribe(audioFileURL: URL, configuration: TranscriptionConfiguration) async throws -> Transcript
 }
+```
+
+Providers are registered in `ProviderRegistry.live()`. Adding one = a new
+conforming type + one line in the registry; the provider picker, model picker,
+API-key storage, and pipeline pick it up automatically.
+
+```swift
 
 struct TranscriptionConfiguration: Sendable {
     var apiKey: String

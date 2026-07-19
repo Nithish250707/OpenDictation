@@ -5,24 +5,34 @@ import Foundation
 /// mocks the same way.
 @MainActor
 struct AppDependencies {
+    let settings: SettingsStore
     let audio: any AudioRecording
     let pasteboard: any PasteboardServicing
     let paste: any PasteServicing
     let accessibility: any AccessibilityPermissionChecking
+    let keyStore: any APIKeyStoring
+    let registry: ProviderRegistry
     let transcription: TranscriptionService
+    let loginItems: any LoginItemManaging
+    let permissionStatus: any PermissionStatusChecking
 
     static func live() -> AppDependencies {
+        let settings = SettingsStore()
         let pasteboard = PasteboardService()
         let accessibility = AccessibilityPermission()
+        let keyStore = KeychainService()
+        let registry = ProviderRegistry.live()
         return AppDependencies(
+            settings: settings,
             audio: AVAudioRecordingService(),
             pasteboard: pasteboard,
             paste: PasteService(pasteboard: pasteboard, permission: accessibility),
             accessibility: accessibility,
-            transcription: TranscriptionService(
-                provider: OpenAITranscriptionProvider(),
-                keyStore: KeychainService()
-            )
+            keyStore: keyStore,
+            registry: registry,
+            transcription: TranscriptionService(registry: registry, keyStore: keyStore, settings: settings),
+            loginItems: LoginItemManager(),
+            permissionStatus: SystemPermissionStatus(accessibility: accessibility)
         )
     }
 }

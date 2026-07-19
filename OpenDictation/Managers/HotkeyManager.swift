@@ -14,7 +14,11 @@ final class HotkeyManager {
 
     private static let signature: OSType = 0x4F44_484B // "ODHK"
 
-    /// Registers the shortcut. Defaults to ⌥Space; configurable in Milestone 7.
+    /// Registers the user's chosen shortcut, replacing any previous one.
+    func register(shortcut: HotkeyShortcut) {
+        register(keyCode: shortcut.keyCode, carbonModifiers: shortcut.carbonModifiers)
+    }
+
     func register(keyCode: UInt32 = UInt32(kVK_Space), carbonModifiers: UInt32 = UInt32(optionKey)) {
         unregister()
         installEventHandlerIfNeeded()
