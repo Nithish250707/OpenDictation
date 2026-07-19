@@ -75,9 +75,11 @@ final class DictationController {
             _ = settings.shortcut
         } onChange: { [weak self] in
             Task { @MainActor [weak self] in
+                // Explicit self: older Swift 6 compilers (CI's Xcode 16.x)
+                // require it through this nested escaping closure.
                 guard let self else { return }
-                hotkeyManager.register(shortcut: settings.shortcut)
-                observeShortcutChanges()
+                self.hotkeyManager.register(shortcut: self.settings.shortcut)
+                self.observeShortcutChanges()
             }
         }
     }
