@@ -44,7 +44,11 @@ Dictation tools like Wispr Flow proved how transformative voice input can be —
 
 Download the latest release from the [Releases page](https://github.com/Nithish250707/OpenDictation/releases), unzip, and drag **OpenDictation.app** to Applications.
 
-> ⚠️ Releases are not yet notarized. On first launch, right-click the app and choose **Open**, or allow it under System Settings → Privacy & Security.
+> ⚠️ **Releases are not yet notarized** (that requires an Apple Developer ID; it's on the roadmap). Gatekeeper will block the first launch of a downloaded copy. To open it:
+> 1. Double-click the app once (it will be blocked), then go to **System Settings → Privacy & Security**, scroll down, and click **"Open Anyway"**. *(On modern macOS the old right-click → Open trick no longer works for unnotarized apps.)*
+> 2. Or, from Terminal: `xattr -d com.apple.quarantine /Applications/OpenDictation.app`
+>
+> Building from source avoids this entirely — locally built apps are never quarantined.
 
 First-run setup takes under a minute:
 1. Click the mic icon in your menu bar → **Settings… → Transcription** and add your API key.
@@ -81,6 +85,8 @@ xcodebuild -project OpenDictation.xcodeproj -scheme OpenDictation test
 Permissions: **Microphone** (required, requested on first recording) and **Accessibility** (optional — only needed for the Paste action, which synthesizes ⌘V).
 
 ## Troubleshooting
+
+**"OpenDictation can't be opened" / Gatekeeper blocks the app** — expected for now: releases are ad-hoc signed, and `spctl` rejects any app without a Developer ID + notarization, no matter how correct its packaging. `codesign --verify` passing while `spctl` rejects is the ad-hoc signature working exactly as designed — internally valid, but carrying no trust chain. Use the "Open Anyway" steps from the Installation section. This disappears permanently once releases are notarized.
 
 **"OpenDictation wants to use your confidential information stored in your keychain"** — you should see this at most once per launch, and on release builds at most once ever. The prompt appears when the app's code signature doesn't match the keychain item's access list. During *development* this is expected: ad-hoc (unsigned) builds get a new signature on every rebuild, so macOS re-asks and "Always Allow" cannot stick. Click Allow, or re-save the key in Settings → Transcription (which re-creates the item under the current build's signature). Properly signed release builds have a stable signature and don't churn. The app performs at most one protected keychain read per provider per launch; menu and Settings presence checks use attribute-only queries that never trigger the prompt.
 

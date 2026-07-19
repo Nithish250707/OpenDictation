@@ -51,6 +51,19 @@ Maintainer guide for cutting a release with auto-update support.
    ```
    Ship order matters: upload the release asset **before** pushing the appcast, so the feed never points at a missing file.
 
+## Gatekeeper reality check
+
+Until a Developer ID is configured, released builds are ad-hoc signed:
+`codesign --verify` passes (the seal is internally valid) but `spctl --assess`
+**always rejects** — ad-hoc signatures carry no trust chain, and notarization
+is impossible (the notary service only accepts Developer-ID-signed uploads).
+Downloaded copies inherit `com.apple.quarantine` from the DMG, so Finder
+invokes Gatekeeper and blocks the launch; users need System Settings →
+Privacy & Security → "Open Anyway" (macOS 15+ removed the right-click → Open
+bypass) or `xattr -d com.apple.quarantine`. Locally built or `ditto`-copied
+apps have no quarantine attribute, which is why they launch fine — test
+Gatekeeper behavior with a genuinely *downloaded* copy.
+
 ## Notes
 
 - The update feed is `appcast.xml` on `main`, served via raw.githubusercontent.com (`SUFeedURL` in Info.plist).
