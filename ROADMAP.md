@@ -8,8 +8,8 @@
 | 2 | Menu bar app — MenuBarExtra, no Dock icon, app menu | ✅ Done |
 | 3 | Recording engine — global shortcut, floating popup, audio capture, timer, waveform | ✅ Done |
 | 4 | OpenAI transcription — provider protocol, multipart upload, error handling | ✅ Done |
-| 5 | Transcript UI — transcript state, Copy / Paste / Retry / Done | ⏳ Next |
-| 6 | Clipboard & paste — pasteboard service, ⌘V synthesis, Accessibility guidance | Planned |
+| 5 | Transcript UI — transcript state, Copy / Retry / Done | ✅ Done |
+| 6 | Clipboard & paste — paste-into-focused-app, ⌘V synthesis, Accessibility guidance | ⏳ Next |
 | 7 | Settings — API key (Keychain), model picker, shortcut, launch at login | Planned |
 | 8 | History — SwiftData store, history window, search, delete | Planned |
 | 9 | Testing — mocks for all services, view model state machine tests | Planned |

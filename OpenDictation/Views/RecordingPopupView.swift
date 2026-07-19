@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Content of the floating recorder panel. Renders whichever step of the
-/// recording state machine is active; the panel window itself is managed by
+/// dictation state machine is active; the panel window itself is managed by
 /// `FloatingPanelManager`.
 struct RecordingPopupView: View {
     let viewModel: RecordingViewModel
@@ -14,14 +14,18 @@ struct RecordingPopupView: View {
                 starting
             case .recording:
                 recording
-            case .stopped(_, let duration):
-                stopped(duration: duration)
+            case .transcribing:
+                transcribing
+            case .transcript(let transcript):
+                transcriptView(transcript)
+            case .failed(let error, let audioFileURL, _):
+                failure(error, canRetry: audioFileURL != nil)
             case .permissionDenied:
                 permissionDenied
             }
         }
         .padding(24)
-        .frame(width: 280)
+        .frame(width: 320)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -58,17 +62,78 @@ struct RecordingPopupView: View {
         }
     }
 
-    private func stopped(duration: TimeInterval) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 28))
-                .foregroundStyle(.green)
-            Text("Recording complete")
+    private var transcribing: some View {
+        VStack(spacing: 10) {
+            ProgressView()
+                .controlSize(.regular)
+            Text("Transcribing…")
                 .font(.headline)
-            Text(RecordingTimerView.format(duration))
-                .font(.callout)
-                .monospacedDigit()
+            Text("Usually just a few seconds")
+                .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private func transcriptView(_ transcript: Transcript) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Transcript", systemImage: "text.quote")
+                    .font(.headline)
+                Spacer()
+                Text(RecordingTimerView.format(transcript.duration))
+                    .font(.caption)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+
+            ScrollView {
+                Text(transcript.text)
+                    .font(.body)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxHeight: 150)
+            .padding(10)
+            .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            HStack(spacing: 8) {
+                Button {
+                    viewModel.copyTranscript()
+                } label: {
+                    Label(viewModel.justCopied ? "Copied" : "Copy", systemImage: viewModel.justCopied ? "checkmark" : "doc.on.doc")
+                        .frame(minWidth: 70)
+                }
+                .buttonStyle(.borderedProminent)
+
+                Spacer()
+
+                Button("Done", action: onDismiss)
+            }
+        }
+    }
+
+    private func failure(_ error: AppError, canRetry: Bool) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 24))
+                .foregroundStyle(.orange)
+            Text("Transcription Failed")
+                .font(.headline)
+            Text(error.localizedDescription)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 8) {
+                Button("Cancel", action: onDismiss)
+                if canRetry {
+                    Button("Retry") {
+                        viewModel.retry()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .padding(.top, 4)
         }
     }
 
@@ -102,9 +167,4 @@ struct RecordingPopupView: View {
         }
         NSWorkspace.shared.open(url)
     }
-}
-
-#Preview("Recording") {
-    RecordingPopupView(viewModel: RecordingViewModel(audio: AVAudioRecordingService()), onDismiss: {})
-        .padding()
 }

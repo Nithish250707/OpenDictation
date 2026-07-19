@@ -14,7 +14,11 @@ final class DictationController {
     var isRecording: Bool { recordingViewModel.state.isRecording }
 
     init(dependencies: AppDependencies) {
-        recordingViewModel = RecordingViewModel(audio: dependencies.audio)
+        recordingViewModel = RecordingViewModel(
+            audio: dependencies.audio,
+            transcription: dependencies.transcription,
+            pasteboard: dependencies.pasteboard
+        )
         hotkeyManager.onHotkeyPressed = { [weak self] in
             self?.toggleDictation()
         }
@@ -27,8 +31,11 @@ final class DictationController {
         case .idle:
             beginDictation()
         case .recording:
-            endDictation()
-        case .stopped, .permissionDenied:
+            recordingViewModel.stopAndTranscribe()
+        case .transcribing:
+            // An upload is in flight; the popup resolves it momentarily.
+            break
+        case .transcript, .failed, .permissionDenied:
             dismiss()
         }
     }
@@ -49,17 +56,6 @@ final class DictationController {
             // A failed start falls back to .idle; don't leave an empty panel up.
             if case .idle = recordingViewModel.state {
                 panelManager.hide()
-            }
-        }
-    }
-
-    private func endDictation() {
-        recordingViewModel.stopRecording()
-        Task {
-            // Let the confirmation register with the user before fading out.
-            try? await Task.sleep(for: .milliseconds(900))
-            if case .stopped = recordingViewModel.state {
-                dismiss()
             }
         }
     }

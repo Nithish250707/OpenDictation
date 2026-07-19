@@ -44,12 +44,15 @@ Working checklist per milestone. Checked = done and committed.
 - [x] Build, zero warnings, tests green, commit
 - [ ] `TranscriptionService` orchestration (recording → upload → result) — moved to Milestone 5, where the flow gets its UI
 
-## Milestone 5 — Transcript UI
+## Milestone 5 — Transcript UI ✅
 
-- [ ] Transcribing state (spinner) and transcript state in the popup
-- [ ] Copy / Paste / Retry / Done actions wired to view model
-- [ ] Error state with actionable message + Retry
-- [ ] Build, zero warnings, commit
+- [x] `TranscriptionService` orchestration (key resolution → provider call), `KeychainService` + `APIKeyStoring` (storage only; Settings UI in Milestone 7)
+- [x] State machine extended: recording → transcribing → transcript | failed (audio kept for Retry; deleted once it has no purpose)
+- [x] Transcribing state (spinner) and transcript state in the popup
+- [x] Copy (with "Copied" feedback) / Retry / Done actions wired to view model — Paste arrives in Milestone 6
+- [x] Friendly error screen using the typed `AppError` messages, Retry re-uses the kept audio
+- [x] 12 new tests (view model state machine with mocks, TranscriptionService key resolution, Keychain round-trip) — 29 total
+- [x] Build, zero warnings, tests green, commit
 
 ## Milestone 6 — Clipboard & Paste
 
