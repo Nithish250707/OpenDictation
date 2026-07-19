@@ -23,6 +23,14 @@ final class AVAudioRecordingService: AudioRecording {
     }
 
     func startRecording() throws -> URL {
+        // Defense in depth: a stray active recorder must never keep the mic
+        // open behind a new session.
+        if let recorder, recorder.isRecording {
+            Log.audio.error("startRecording called while already recording; stopping the previous session")
+            recorder.stop()
+            self.recorder = nil
+        }
+
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("OpenDictation-\(UUID().uuidString)")
             .appendingPathExtension("m4a")

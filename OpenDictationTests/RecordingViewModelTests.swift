@@ -76,6 +76,33 @@ struct RecordingViewModelTests {
         #expect(harness.viewModel.state == .permissionDenied)
     }
 
+    @Test func rapidDoubleStartRecordsOnlyOnce() async {
+        let harness = Harness()
+        // Open the async permission gap so the second call can race the first.
+        harness.audio.permissionDelayMilliseconds = 40
+
+        async let first: Void = harness.viewModel.startRecording()
+        async let second: Void = harness.viewModel.startRecording()
+        _ = await (first, second)
+
+        #expect(harness.audio.startCount == 1)
+        #expect(harness.viewModel.state.isRecording)
+    }
+
+    @Test func recorderStartFailureSurfacesAnError() async {
+        let harness = Harness()
+        harness.audio.startError = AppError.audioRecordingFailed
+
+        await harness.viewModel.startRecording()
+
+        guard case .failed(let error, let audioFileURL, _) = harness.viewModel.state else {
+            Issue.record("Expected .failed, got \(harness.viewModel.state)")
+            return
+        }
+        #expect(error == .audioRecordingFailed)
+        #expect(audioFileURL == nil)
+    }
+
     // MARK: - Transcription
 
     @Test func stopProducesTranscriptAndDeletesAudio() async throws {
@@ -130,6 +157,29 @@ struct RecordingViewModelTests {
         #expect(error == .missingAPIKey)
     }
 
+    @Test func dismissDuringTranscriptionDiscardsTheStaleResult() async throws {
+        let slowProvider = MockTranscriptionProvider { _, _ in
+            try await Task.sleep(for: .milliseconds(80))
+            return Transcript(text: "too late", duration: 1, providerID: "mock", model: "mock-default", createdAt: .now)
+        }
+        let harness = Harness(provider: slowProvider)
+
+        await harness.viewModel.startRecording()
+        harness.viewModel.stopAndTranscribe()
+        // Wait until the upload is in flight, then dismiss mid-request.
+        for _ in 0..<100 {
+            if case .transcribing = harness.viewModel.state { break }
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        harness.viewModel.reset()
+        try await Task.sleep(for: .milliseconds(150))
+
+        // The late result must not resurrect the UI.
+        #expect(harness.viewModel.state == .idle)
+        let audioURL = try #require(harness.audio.recordedFileURL)
+        #expect(!FileManager.default.fileExists(atPath: audioURL.path))
+    }
+
     // MARK: - History
 
     @Test func successfulTranscriptionIsSavedToHistory() async {
@@ -169,6 +219,29 @@ struct RecordingViewModelTests {
         await harness.dictate()
 
         #expect(harness.pasteboard.copiedStrings == ["Auto-copied"])
+    }
+
+    @Test func autoCopyReportsHonestlyWhenClipboardFails() async {
+        let harness = Harness(provider: .returning("Never copied"))
+        harness.pasteboard.succeeds = false
+
+        await harness.dictate()
+
+        #expect(!harness.viewModel.autoCopied)
+        #expect(harness.viewModel.pasteErrorMessage != nil)
+        // The transcript itself must still be delivered.
+        if case .transcript = harness.viewModel.state {} else {
+            Issue.record("Expected .transcript, got \(harness.viewModel.state)")
+        }
+    }
+
+    @Test func successfulAutoCopySetsTheIndicator() async {
+        let harness = Harness(provider: .returning("Copied fine"))
+
+        await harness.dictate()
+
+        #expect(harness.viewModel.autoCopied)
+        #expect(harness.viewModel.pasteErrorMessage == nil)
     }
 
     @Test func autoCopyOffLeavesClipboardAlone() async {

@@ -63,9 +63,10 @@ struct PasteServiceTests {
         #expect(pasteboard.copiedStrings == ["Hello"])
     }
 
-    @Test func accessibilitySettingsDeepLinkIsWellFormed() {
-        let url = URL(string: AccessibilityPermission.settingsURLString)
-        #expect(url != nil)
-        #expect(AccessibilityPermission.settingsURLString.contains("Privacy_Accessibility"))
+    @Test func systemSettingsDeepLinksAreWellFormed() {
+        #expect(SystemSettingsDeepLink.accessibility.absoluteString.contains("Privacy_Accessibility"))
+        #expect(SystemSettingsDeepLink.microphone.absoluteString.contains("Privacy_Microphone"))
+        #expect(SystemSettingsDeepLink.accessibility.scheme == "x-apple.systempreferences")
+        #expect(SystemSettingsDeepLink.microphone.scheme == "x-apple.systempreferences")
     }
 }

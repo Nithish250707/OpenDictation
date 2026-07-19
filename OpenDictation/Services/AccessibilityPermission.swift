@@ -11,15 +11,11 @@ protocol AccessibilityPermissionChecking: AnyObject {
 }
 
 final class AccessibilityPermission: AccessibilityPermissionChecking {
-    /// Deep link straight to Privacy & Security → Accessibility.
-    static let settingsURLString = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-
     var isGranted: Bool {
         AXIsProcessTrusted()
     }
 
     func openSystemSettings() {
-        guard let url = URL(string: Self.settingsURLString) else { return }
-        NSWorkspace.shared.open(url)
+        SystemSettingsDeepLink.open(SystemSettingsDeepLink.accessibility)
     }
 }

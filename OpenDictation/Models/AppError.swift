@@ -33,7 +33,7 @@ enum AppError: LocalizedError, Equatable {
         case .accessibilityPermissionDenied:
             "Accessibility access is required to paste into other apps."
         case .pasteFailed:
-            "Couldn't paste automatically. The transcript is on your clipboard — press ⌘V to paste it."
+            "Couldn't paste automatically. Use Copy, then press ⌘V in the target app."
         case .missingAPIKey:
             "Add your API key in Settings to enable transcription."
         case .invalidAPIKey:

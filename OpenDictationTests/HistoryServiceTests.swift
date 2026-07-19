@@ -42,6 +42,16 @@ struct HistoryServiceTests {
         #expect(try service.records(matching: "").count == 2)
     }
 
+    @Test func searchHandlesPunctuationAndEmoji() throws {
+        let service = HistoryService.inMemory()
+        try service.save(makeTranscript("It's ~100% done (finally) 🎉"))
+
+        #expect(try service.records(matching: "100%").count == 1)
+        #expect(try service.records(matching: "it's").count == 1)
+        #expect(try service.records(matching: "🎉").count == 1)
+        #expect(try service.records(matching: "(finally)").count == 1)
+    }
+
     @Test func deleteRemovesOnlyThatRecord() throws {
         let service = HistoryService.inMemory()
         try service.save(makeTranscript("keep me", at: .now.addingTimeInterval(-10)))

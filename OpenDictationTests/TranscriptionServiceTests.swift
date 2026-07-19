@@ -105,7 +105,7 @@ struct TranscriptionServiceTests {
 private final class CapturedConfiguration: @unchecked Sendable {
     var value: TranscriptionConfiguration?
 
-    func handler() -> @Sendable (URL, TranscriptionConfiguration) throws -> Transcript {
+    func handler() -> @Sendable (URL, TranscriptionConfiguration) async throws -> Transcript {
         { _, configuration in
             self.value = configuration
             return Transcript(text: "ok", duration: 1, providerID: "mock", model: configuration.model, createdAt: .now)

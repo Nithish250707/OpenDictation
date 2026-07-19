@@ -19,7 +19,9 @@ final class HotkeyManager {
         register(keyCode: shortcut.keyCode, carbonModifiers: shortcut.carbonModifiers)
     }
 
-    func register(keyCode: UInt32 = UInt32(kVK_Space), carbonModifiers: UInt32 = UInt32(optionKey)) {
+    // `HotkeyShortcut` is the single source of truth for defaults; the raw
+    // variant exists only as the Carbon-facing implementation.
+    private func register(keyCode: UInt32, carbonModifiers: UInt32) {
         unregister()
         installEventHandlerIfNeeded()
 

@@ -6,15 +6,24 @@ import Foundation
 @MainActor
 final class MockAudioRecording: AudioRecording {
     var permissionGranted = true
+    /// Simulates the async gap while macOS shows the permission prompt.
+    var permissionDelayMilliseconds = 0
     var startError: Error?
     var recordedFileURL: URL?
+    private(set) var startCount = 0
 
     private(set) var isRecording = false
 
-    func requestPermission() async -> Bool { permissionGranted }
+    func requestPermission() async -> Bool {
+        if permissionDelayMilliseconds > 0 {
+            try? await Task.sleep(for: .milliseconds(permissionDelayMilliseconds))
+        }
+        return permissionGranted
+    }
 
     func startRecording() throws -> URL {
         if let startError { throw startError }
+        startCount += 1
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("mock-recording-\(UUID().uuidString).m4a")
         try Data("mock-audio".utf8).write(to: url)
@@ -36,10 +45,10 @@ struct MockTranscriptionProvider: TranscriptionProvider {
     var displayName = "Mock"
     var defaultModel = "mock-default"
     var supportedModels = ["mock-default", "mock-advanced"]
-    let handler: @Sendable (URL, TranscriptionConfiguration) throws -> Transcript
+    let handler: @Sendable (URL, TranscriptionConfiguration) async throws -> Transcript
 
     func transcribe(audioFileURL: URL, configuration: TranscriptionConfiguration) async throws -> Transcript {
-        try handler(audioFileURL, configuration)
+        try await handler(audioFileURL, configuration)
     }
 
     static func returning(_ text: String) -> MockTranscriptionProvider {

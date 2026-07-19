@@ -23,7 +23,8 @@ final class PermissionsViewModel {
         guard pollTask == nil else { return }
         pollTask = Task { [weak self] in
             while !Task.isCancelled {
-                self?.refresh()
+                guard let self else { return }
+                self.refresh()
                 try? await Task.sleep(for: .seconds(1))
             }
         }
@@ -40,15 +41,10 @@ final class PermissionsViewModel {
     }
 
     func openMicrophoneSettings() {
-        open("x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")
+        SystemSettingsDeepLink.open(SystemSettingsDeepLink.microphone)
     }
 
     func openAccessibilitySettings() {
-        open(AccessibilityPermission.settingsURLString)
-    }
-
-    private func open(_ urlString: String) {
-        guard let url = URL(string: urlString) else { return }
-        NSWorkspace.shared.open(url)
+        SystemSettingsDeepLink.open(SystemSettingsDeepLink.accessibility)
     }
 }

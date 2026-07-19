@@ -43,6 +43,26 @@ struct SettingsStoreTests {
         #expect(second.panelAppearance == .dark)
     }
 
+    @Test func corruptShortcutDataFallsBackToDefault() {
+        let defaults = UserDefaults.ephemeral()
+        defaults.set(Data("not json at all".utf8), forKey: "settings.shortcut")
+
+        let store = SettingsStore(defaults: defaults)
+
+        #expect(store.shortcut == .optionSpace)
+    }
+
+    @Test func unknownEnumRawValuesFallBackToDefaults() {
+        let defaults = UserDefaults.ephemeral()
+        defaults.set("gigantic", forKey: "settings.panelSize")
+        defaults.set("sepia", forKey: "settings.panelAppearance")
+
+        let store = SettingsStore(defaults: defaults)
+
+        #expect(store.panelSize == .standard)
+        #expect(store.panelAppearance == .system)
+    }
+
     @Test func clearingLanguageReturnsToAutoDetect() {
         let defaults = UserDefaults.ephemeral()
 

@@ -9,12 +9,16 @@ import SwiftUI
 final class FloatingPanelManager {
     private let settings: SettingsStore
     private var panel: NSPanel?
+    /// Incremented on every show; a pending hide-completion from before the
+    /// latest show must not order the panel out from under a new session.
+    private var showGeneration = 0
 
     init(settings: SettingsStore) {
         self.settings = settings
     }
 
     func show<Content: View>(@ViewBuilder content: () -> Content) {
+        showGeneration += 1
         let panel = self.panel ?? makePanel()
         self.panel = panel
         panel.appearance = Self.appearance(for: settings.panelAppearance)
@@ -45,6 +49,7 @@ final class FloatingPanelManager {
 
     func hide() {
         guard let panel, panel.isVisible else { return }
+        let generation = showGeneration
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = 0.15
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
@@ -52,7 +57,9 @@ final class FloatingPanelManager {
         }, completionHandler: {
             // AppKit calls the completion on the main thread; the SDK just
             // hasn't annotated it as such.
-            MainActor.assumeIsolated {
+            MainActor.assumeIsolated { [weak self] in
+                // A new session may have re-shown the panel during the fade.
+                guard self?.showGeneration == generation else { return }
                 panel.orderOut(nil)
             }
         })

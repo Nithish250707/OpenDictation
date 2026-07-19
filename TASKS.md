@@ -87,14 +87,20 @@ Working checklist per milestone. Checked = done and committed.
 - [x] 13 new tests: service round-trips/search/sort, view model, auto-save behavior — 80 total
 - [x] Build, zero warnings, tests green, commit
 
-## Milestone 9 — Testing
+## Milestone 9 — Production Hardening ✅
 
-- [ ] `OpenDictationTests` target
-- [ ] Mocks for every service protocol
-- [ ] Multipart encoder + OpenAI response/error parsing tests (URLProtocol stubs)
-- [ ] `RecordingViewModel` state machine tests (happy path + failures)
-- [ ] Keychain round-trip test (isolated service)
-- [ ] Build, tests green, commit
+(The test target, mocks, and state-machine tests originally planned here were
+built incrementally in Milestones 4–8; this milestone became an audit.)
+
+- [x] Fixed double-start race through the async mic-permission gap (`isStarting` guard + post-await state re-check + defensive recorder stop)
+- [x] Fixed panel hide/show race (generation-guarded fade-out completion)
+- [x] Recorder start failure surfaces a friendly error instead of vanishing
+- [x] Cancel button in the Transcribing state (hung uploads can't trap the user)
+- [x] "Copied to clipboard" indicator reflects the actual clipboard result
+- [x] Copy/Paste feedback timers are cancellation-safe; permissions poller can't outlive its view model
+- [x] Deep links consolidated (`SystemSettingsDeepLink`); duplicate default-shortcut source removed
+- [x] Force-unwrap/force-cast audit: none remain except documented compile-time constants
+- [x] 8 new regression tests (88 total, 14 suites); zero warnings
 
 ## Milestone 10 — Open Source Polish
 

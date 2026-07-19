@@ -15,6 +15,9 @@ final class RecordingViewModel {
     /// Briefly true after Copy / Paste, so the buttons can acknowledge the action.
     private(set) var justCopied = false
     private(set) var justPasted = false
+    /// True only when the automatic copy actually reached the clipboard —
+    /// the UI must not claim "Copied" on the strength of the setting alone.
+    private(set) var autoCopied = false
     /// Set when Paste was attempted without Accessibility permission;
     /// the transcript view shows inline guidance while this is true.
     private(set) var needsAccessibilityPermission = false
@@ -28,6 +31,11 @@ final class RecordingViewModel {
     private let settings: SettingsStore
     private let history: any HistoryStoring
     private var meterTask: Task<Void, Never>?
+    private var copyFeedbackTask: Task<Void, Never>?
+    private var pasteFeedbackTask: Task<Void, Never>?
+    /// Guards against a second `startRecording` racing the first through the
+    /// async permission gap (e.g. the shortcut pressed twice quickly).
+    private var isStarting = false
 
     init(
         audio: any AudioRecording,
@@ -51,12 +59,17 @@ final class RecordingViewModel {
     // MARK: - Recording
 
     func startRecording() async {
-        guard case .idle = state else { return }
+        guard case .idle = state, !isStarting else { return }
+        isStarting = true
+        defer { isStarting = false }
 
         guard await audio.requestPermission() else {
             state = .permissionDenied
             return
         }
+        // The permission await yields the main actor; re-check that nothing
+        // else moved the state machine meanwhile.
+        guard case .idle = state else { return }
 
         do {
             _ = try audio.startRecording()
@@ -66,7 +79,8 @@ final class RecordingViewModel {
             startMetering()
         } catch {
             Log.audio.error("Could not start recording: \(error.localizedDescription)")
-            state = .idle
+            // Surface the failure instead of silently vanishing.
+            state = .failed(error: .audioRecordingFailed, audioFileURL: nil, duration: 0)
         }
     }
 
@@ -103,7 +117,10 @@ final class RecordingViewModel {
             // The finished transcript goes straight to the clipboard so the
             // user can ⌘V immediately, even before touching the popup.
             if settings.autoCopy {
-                pasteboard.copy(transcript.text)
+                autoCopied = pasteboard.copy(transcript.text)
+                if !autoCopied {
+                    pasteErrorMessage = "Couldn't copy to the clipboard automatically. Use the Copy button."
+                }
             }
             // History must never block the dictation flow; a failed save is
             // logged and the transcript still reaches the user.
@@ -140,9 +157,13 @@ final class RecordingViewModel {
         }
         pasteErrorMessage = nil
         justCopied = true
-        Task {
+        // Cancel any previous feedback timer so a rapid second click can't be
+        // cleared early by the first click's timer.
+        copyFeedbackTask?.cancel()
+        copyFeedbackTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(1_500))
-            justCopied = false
+            guard !Task.isCancelled else { return }
+            self?.justCopied = false
         }
     }
 
@@ -154,9 +175,11 @@ final class RecordingViewModel {
         do {
             try paste.pasteToFocusedApp(transcript.text)
             justPasted = true
-            Task {
+            pasteFeedbackTask?.cancel()
+            pasteFeedbackTask = Task { [weak self] in
                 try? await Task.sleep(for: .milliseconds(1_500))
-                justPasted = false
+                guard !Task.isCancelled else { return }
+                self?.justPasted = false
             }
         } catch AppError.accessibilityPermissionDenied {
             needsAccessibilityPermission = true
@@ -179,6 +202,10 @@ final class RecordingViewModel {
     /// no dictation audio should linger on disk.
     func reset() {
         stopMetering()
+        copyFeedbackTask?.cancel()
+        copyFeedbackTask = nil
+        pasteFeedbackTask?.cancel()
+        pasteFeedbackTask = nil
         switch state {
         case .transcribing(let url, _):
             deleteAudioFile(at: url)
@@ -191,6 +218,7 @@ final class RecordingViewModel {
         elapsed = 0
         justCopied = false
         justPasted = false
+        autoCopied = false
         needsAccessibilityPermission = false
         pasteErrorMessage = nil
         levels = Array(repeating: 0, count: Self.waveformBarCount)

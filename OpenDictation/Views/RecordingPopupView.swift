@@ -72,6 +72,10 @@ struct RecordingPopupView: View {
             Text("Usually just a few seconds")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            // A hung upload must never trap the user in this state.
+            Button("Cancel", action: onDismiss)
+                .controlSize(.small)
+                .padding(.top, 2)
         }
     }
 
@@ -97,7 +101,7 @@ struct RecordingPopupView: View {
             .padding(10)
             .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
-            if settings.autoCopy {
+            if viewModel.autoCopied {
                 Label("Copied to clipboard", systemImage: "checkmark.circle")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -164,7 +168,8 @@ struct RecordingPopupView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 24))
                 .foregroundStyle(.orange)
-            Text("Transcription Failed")
+            // Recording failures land here too, so keep the title generic.
+            Text("Something Went Wrong")
                 .font(.headline)
             Text(error.localizedDescription)
                 .font(.caption)
@@ -209,9 +214,6 @@ struct RecordingPopupView: View {
     }
 
     private func openMicrophonePrivacySettings() {
-        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") else {
-            return
-        }
-        NSWorkspace.shared.open(url)
+        SystemSettingsDeepLink.open(SystemSettingsDeepLink.microphone)
     }
 }
