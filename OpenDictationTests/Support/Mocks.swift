@@ -66,7 +66,32 @@ final class InMemoryAPIKeyStore: APIKeyStoring, @unchecked Sendable {
 
 @MainActor
 final class SpyPasteboard: PasteboardServicing {
+    var succeeds = true
     private(set) var copiedStrings: [String] = []
 
-    func copy(_ text: String) { copiedStrings.append(text) }
+    @discardableResult
+    func copy(_ text: String) -> Bool {
+        guard succeeds else { return false }
+        copiedStrings.append(text)
+        return true
+    }
+}
+
+@MainActor
+final class MockAccessibilityPermission: AccessibilityPermissionChecking {
+    var isGranted = true
+    private(set) var openSettingsCount = 0
+
+    func openSystemSettings() { openSettingsCount += 1 }
+}
+
+@MainActor
+final class SpyKeyEventSynthesizer: KeyEventSynthesizing {
+    var error: Error?
+    private(set) var postCount = 0
+
+    func postCommandV() throws {
+        if let error { throw error }
+        postCount += 1
+    }
 }

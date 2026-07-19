@@ -8,6 +8,10 @@ enum AppError: LocalizedError, Equatable {
     case audioRecordingFailed
     case audioFileUnreadable
 
+    // Paste
+    case accessibilityPermissionDenied
+    case pasteFailed
+
     // Transcription
     case missingAPIKey
     case invalidAPIKey
@@ -26,6 +30,10 @@ enum AppError: LocalizedError, Equatable {
             "Recording couldn't be started. Please try again."
         case .audioFileUnreadable:
             "The recording could not be read. Please try again."
+        case .accessibilityPermissionDenied:
+            "Accessibility access is required to paste into other apps."
+        case .pasteFailed:
+            "Couldn't paste automatically. The transcript is on your clipboard — press ⌘V to paste it."
         case .missingAPIKey:
             "Add your API key in Settings to enable transcription."
         case .invalidAPIKey:

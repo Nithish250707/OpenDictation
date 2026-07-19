@@ -25,7 +25,7 @@ struct RecordingPopupView: View {
             }
         }
         .padding(24)
-        .frame(width: 320)
+        .frame(width: 340)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -96,12 +96,22 @@ struct RecordingPopupView: View {
             .padding(10)
             .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
+            Label("Copied to clipboard", systemImage: "checkmark.circle")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
             HStack(spacing: 8) {
                 Button {
                     viewModel.copyTranscript()
                 } label: {
                     Label(viewModel.justCopied ? "Copied" : "Copy", systemImage: viewModel.justCopied ? "checkmark" : "doc.on.doc")
-                        .frame(minWidth: 70)
+                }
+
+                Button {
+                    viewModel.pasteTranscript()
+                } label: {
+                    Label(viewModel.justPasted ? "Pasted" : "Paste", systemImage: viewModel.justPasted ? "checkmark" : "arrow.down.doc")
+                        .frame(minWidth: 60)
                 }
                 .buttonStyle(.borderedProminent)
 
@@ -109,6 +119,40 @@ struct RecordingPopupView: View {
 
                 Button("Done", action: onDismiss)
             }
+
+            if let pasteErrorMessage = viewModel.pasteErrorMessage {
+                Text(pasteErrorMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if viewModel.needsAccessibilityPermission {
+                accessibilityHelp
+            }
+        }
+    }
+
+    /// Inline guidance shown when Paste needs the Accessibility permission.
+    private var accessibilityHelp: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+            Label("Accessibility Access Needed", systemImage: "hand.raised")
+                .font(.subheadline.weight(.semibold))
+            Text("To paste for you, Open Dictation needs Accessibility access. Your transcript is already on the clipboard, so you can also just press ⌘V.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                Button("Open Accessibility Settings") {
+                    viewModel.openAccessibilitySettings()
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button("Not Now") {
+                    viewModel.dismissAccessibilityHelp()
+                }
+            }
+            .controlSize(.small)
         }
     }
 

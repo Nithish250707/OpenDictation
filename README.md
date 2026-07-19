@@ -42,6 +42,13 @@ xcodebuild -project OpenDictation.xcodeproj -scheme OpenDictation build
 
 Your audio is sent directly from your Mac to the transcription provider you configure — there is no middleman server. Recordings are deleted after successful transcription. History is stored locally. Your API key lives in the Keychain. Nothing is ever collected by this project.
 
+## Permissions
+
+| Permission | When | Why |
+|---|---|---|
+| Microphone | First recording | Capturing your dictation |
+| Accessibility | Only if you use **Paste** | Synthesizing ⌘V into the app you're dictating into (the transcript is always copied to the clipboard regardless, so this permission is optional) |
+
 ## Documentation
 
 | Doc | Purpose |

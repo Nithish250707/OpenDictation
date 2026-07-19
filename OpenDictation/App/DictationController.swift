@@ -17,7 +17,9 @@ final class DictationController {
         recordingViewModel = RecordingViewModel(
             audio: dependencies.audio,
             transcription: dependencies.transcription,
-            pasteboard: dependencies.pasteboard
+            pasteboard: dependencies.pasteboard,
+            paste: dependencies.paste,
+            accessibility: dependencies.accessibility
         )
         hotkeyManager.onHotkeyPressed = { [weak self] in
             self?.toggleDictation()

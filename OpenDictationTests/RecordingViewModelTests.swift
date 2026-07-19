@@ -4,128 +4,206 @@ import Testing
 
 @MainActor
 struct RecordingViewModelTests {
-    private func makeViewModel(
-        provider: MockTranscriptionProvider = .returning("Hello"),
-        audio: MockAudioRecording = MockAudioRecording(),
-        pasteboard: SpyPasteboard = SpyPasteboard()
-    ) -> (RecordingViewModel, MockAudioRecording, SpyPasteboard) {
-        let transcription = TranscriptionService(
-            provider: provider,
-            keyStore: InMemoryAPIKeyStore(keys: ["mock": "sk-test"]),
-            environment: [:]
-        )
-        return (RecordingViewModel(audio: audio, transcription: transcription, pasteboard: pasteboard), audio, pasteboard)
-    }
+    /// Everything a test needs: the view model plus every injected double.
+    @MainActor
+    private struct Harness {
+        let audio = MockAudioRecording()
+        let pasteboard = SpyPasteboard()
+        let permission = MockAccessibilityPermission()
+        let synthesizer = SpyKeyEventSynthesizer()
+        let viewModel: RecordingViewModel
 
-    /// After `stopAndTranscribe()` the state advances asynchronously
-    /// (.recording → .transcribing → terminal); poll until it settles.
-    private func waitForSettledState(of viewModel: RecordingViewModel) async {
-        for _ in 0..<100 {
-            switch viewModel.state {
-            case .recording, .transcribing:
-                try? await Task.sleep(for: .milliseconds(10))
-            default:
-                return
+        init(
+            provider: MockTranscriptionProvider = .returning("Hello"),
+            apiKeys: [String: String] = ["mock": "sk-test"]
+        ) {
+            let transcription = TranscriptionService(
+                provider: provider,
+                keyStore: InMemoryAPIKeyStore(keys: apiKeys),
+                environment: [:]
+            )
+            viewModel = RecordingViewModel(
+                audio: audio,
+                transcription: transcription,
+                pasteboard: pasteboard,
+                paste: PasteService(pasteboard: pasteboard, permission: permission, synthesizer: synthesizer),
+                accessibility: permission
+            )
+        }
+
+        /// After `stopAndTranscribe()` the state advances asynchronously
+        /// (.recording → .transcribing → terminal); poll until it settles.
+        func waitForSettledState() async {
+            for _ in 0..<100 {
+                switch viewModel.state {
+                case .recording, .transcribing:
+                    try? await Task.sleep(for: .milliseconds(10))
+                default:
+                    return
+                }
             }
+        }
+
+        func dictate() async {
+            await viewModel.startRecording()
+            viewModel.stopAndTranscribe()
+            await waitForSettledState()
         }
     }
 
+    // MARK: - Recording
+
     @Test func startTransitionsToRecording() async {
-        let (viewModel, _, _) = makeViewModel()
+        let harness = Harness()
 
-        await viewModel.startRecording()
+        await harness.viewModel.startRecording()
 
-        #expect(viewModel.state.isRecording)
+        #expect(harness.viewModel.state.isRecording)
     }
 
     @Test func deniedPermissionTransitionsToPermissionDenied() async {
-        let audio = MockAudioRecording()
-        audio.permissionGranted = false
-        let (viewModel, _, _) = makeViewModel(audio: audio)
+        let harness = Harness()
+        harness.audio.permissionGranted = false
 
-        await viewModel.startRecording()
+        await harness.viewModel.startRecording()
 
-        #expect(viewModel.state == .permissionDenied)
+        #expect(harness.viewModel.state == .permissionDenied)
     }
 
+    // MARK: - Transcription
+
     @Test func stopProducesTranscriptAndDeletesAudio() async throws {
-        let (viewModel, audio, _) = makeViewModel(provider: .returning("Hello, world."))
+        let harness = Harness(provider: .returning("Hello, world."))
 
-        await viewModel.startRecording()
-        viewModel.stopAndTranscribe()
-        await waitForSettledState(of: viewModel)
+        await harness.dictate()
 
-        guard case .transcript(let transcript) = viewModel.state else {
-            Issue.record("Expected .transcript, got \(viewModel.state)")
+        guard case .transcript(let transcript) = harness.viewModel.state else {
+            Issue.record("Expected .transcript, got \(harness.viewModel.state)")
             return
         }
         #expect(transcript.text == "Hello, world.")
-        let audioURL = try #require(audio.recordedFileURL)
+        let audioURL = try #require(harness.audio.recordedFileURL)
         #expect(!FileManager.default.fileExists(atPath: audioURL.path))
     }
 
     @Test func failureKeepsAudioForRetry() async throws {
-        let (viewModel, audio, _) = makeViewModel(provider: .failing(.networkUnavailable))
+        let harness = Harness(provider: .failing(.networkUnavailable))
 
-        await viewModel.startRecording()
-        viewModel.stopAndTranscribe()
-        await waitForSettledState(of: viewModel)
+        await harness.dictate()
 
-        guard case .failed(let error, let audioFileURL, _) = viewModel.state else {
-            Issue.record("Expected .failed, got \(viewModel.state)")
+        guard case .failed(let error, let audioFileURL, _) = harness.viewModel.state else {
+            Issue.record("Expected .failed, got \(harness.viewModel.state)")
             return
         }
         #expect(error == .networkUnavailable)
         let keptURL = try #require(audioFileURL)
         #expect(FileManager.default.fileExists(atPath: keptURL.path))
-        #expect(keptURL == audio.recordedFileURL)
+        #expect(keptURL == harness.audio.recordedFileURL)
     }
 
     @Test func resetAfterFailureDeletesKeptAudio() async throws {
-        let (viewModel, audio, _) = makeViewModel(provider: .failing(.requestTimedOut))
+        let harness = Harness(provider: .failing(.requestTimedOut))
 
-        await viewModel.startRecording()
-        viewModel.stopAndTranscribe()
-        await waitForSettledState(of: viewModel)
-        viewModel.reset()
+        await harness.dictate()
+        harness.viewModel.reset()
 
-        #expect(viewModel.state == .idle)
-        let audioURL = try #require(audio.recordedFileURL)
+        #expect(harness.viewModel.state == .idle)
+        let audioURL = try #require(harness.audio.recordedFileURL)
         #expect(!FileManager.default.fileExists(atPath: audioURL.path))
     }
 
     @Test func missingAPIKeySurfacesTypedError() async {
-        let transcription = TranscriptionService(
-            provider: MockTranscriptionProvider.returning("unused"),
-            keyStore: InMemoryAPIKeyStore(),
-            environment: [:]
-        )
-        let viewModel = RecordingViewModel(
-            audio: MockAudioRecording(),
-            transcription: transcription,
-            pasteboard: SpyPasteboard()
-        )
+        let harness = Harness(apiKeys: [:])
 
-        await viewModel.startRecording()
-        viewModel.stopAndTranscribe()
-        await waitForSettledState(of: viewModel)
+        await harness.dictate()
 
-        guard case .failed(let error, _, _) = viewModel.state else {
-            Issue.record("Expected .failed, got \(viewModel.state)")
+        guard case .failed(let error, _, _) = harness.viewModel.state else {
+            Issue.record("Expected .failed, got \(harness.viewModel.state)")
             return
         }
         #expect(error == .missingAPIKey)
     }
 
-    @Test func copyPutsTranscriptTextOnPasteboard() async {
-        let (viewModel, _, pasteboard) = makeViewModel(provider: .returning("Copy me"))
+    // MARK: - Clipboard & paste
 
-        await viewModel.startRecording()
-        viewModel.stopAndTranscribe()
-        await waitForSettledState(of: viewModel)
-        viewModel.copyTranscript()
+    @Test func successfulTranscriptionAutoCopies() async {
+        let harness = Harness(provider: .returning("Auto-copied"))
 
-        #expect(pasteboard.copiedStrings == ["Copy me"])
-        #expect(viewModel.justCopied)
+        await harness.dictate()
+
+        #expect(harness.pasteboard.copiedStrings == ["Auto-copied"])
+    }
+
+    @Test func manualCopyCopiesAgain() async {
+        let harness = Harness(provider: .returning("Copy me"))
+
+        await harness.dictate()
+        harness.viewModel.copyTranscript()
+
+        #expect(harness.pasteboard.copiedStrings == ["Copy me", "Copy me"])
+        #expect(harness.viewModel.justCopied)
+    }
+
+    @Test func pasteSynthesizesKeystrokeAndAcknowledges() async {
+        let harness = Harness(provider: .returning("Paste me"))
+        harness.permission.isGranted = true
+
+        await harness.dictate()
+        harness.viewModel.pasteTranscript()
+
+        #expect(harness.synthesizer.postCount == 1)
+        #expect(harness.pasteboard.copiedStrings.last == "Paste me")
+        #expect(harness.viewModel.justPasted)
+        #expect(!harness.viewModel.needsAccessibilityPermission)
+    }
+
+    @Test func pasteWithoutPermissionShowsAccessibilityHelp() async {
+        let harness = Harness(provider: .returning("Paste me"))
+        harness.permission.isGranted = false
+
+        await harness.dictate()
+        harness.viewModel.pasteTranscript()
+
+        #expect(harness.viewModel.needsAccessibilityPermission)
+        #expect(harness.synthesizer.postCount == 0)
+        // Still in the transcript state — the user keeps their text.
+        if case .transcript = harness.viewModel.state {} else {
+            Issue.record("Expected to stay in .transcript, got \(harness.viewModel.state)")
+        }
+    }
+
+    @Test func pasteSynthesisFailureShowsFriendlyMessageAndKeepsTranscript() async {
+        let harness = Harness(provider: .returning("Paste me"))
+        harness.synthesizer.error = AppError.pasteFailed
+
+        await harness.dictate()
+        harness.viewModel.pasteTranscript()
+
+        #expect(harness.viewModel.pasteErrorMessage != nil)
+        #expect(!harness.viewModel.justPasted)
+        if case .transcript = harness.viewModel.state {} else {
+            Issue.record("Expected to stay in .transcript, got \(harness.viewModel.state)")
+        }
+    }
+
+    @Test func openAccessibilitySettingsDelegatesToPermissionService() async {
+        let harness = Harness()
+
+        harness.viewModel.openAccessibilitySettings()
+
+        #expect(harness.permission.openSettingsCount == 1)
+    }
+
+    @Test func resetClearsPasteState() async {
+        let harness = Harness(provider: .returning("text"))
+        harness.permission.isGranted = false
+
+        await harness.dictate()
+        harness.viewModel.pasteTranscript()
+        harness.viewModel.reset()
+
+        #expect(!harness.viewModel.needsAccessibilityPermission)
+        #expect(harness.viewModel.pasteErrorMessage == nil)
+        #expect(harness.viewModel.state == .idle)
     }
 }

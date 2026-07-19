@@ -54,12 +54,14 @@ Working checklist per milestone. Checked = done and committed.
 - [x] 12 new tests (view model state machine with mocks, TranscriptionService key resolution, Keychain round-trip) — 29 total
 - [x] Build, zero warnings, tests green, commit
 
-## Milestone 6 — Clipboard & Paste
+## Milestone 6 — Clipboard & Paste ✅
 
-- [ ] `PasteboardService` (copy + synthesized ⌘V)
-- [ ] Accessibility permission detection + guidance flow
-- [ ] Copy-only fallback when permission missing
-- [ ] Build, zero warnings, commit
+- [x] Auto-copy transcript to clipboard on successful transcription (Copy button kept)
+- [x] `PasteService` (permission gate → copy → synthesized ⌘V via `KeyEventSynthesizing`)
+- [x] `AccessibilityPermission` detection (`AXIsProcessTrusted`, checked per attempt) + inline guidance with System Settings deep link
+- [x] Copy-only fallback when permission missing; friendly message when synthesis fails
+- [x] 13 new tests: paste service, clipboard service (real pasteboard, restored), permission flow, view model transitions — 42 total
+- [x] Build, zero warnings, tests green, commit
 
 ## Milestone 7 — Settings
 
