@@ -34,14 +34,15 @@ Working checklist per milestone. Checked = done and committed.
 - [x] `AppDependencies` + `DictationController` composition root; menu item toggles Start/Stop
 - [x] Build, zero warnings, commit
 
-## Milestone 4 — OpenAI Transcription
+## Milestone 4 — OpenAI Transcription ✅
 
-- [ ] `TranscriptionProvider` protocol + `TranscriptionConfiguration` + `Transcript`
-- [ ] `MultipartFormEncoder`
-- [ ] `OpenAITranscriptionProvider` (URLSession)
-- [ ] `AppError` taxonomy + friendly messages
-- [ ] `TranscriptionService` orchestration (recording → upload → result)
-- [ ] Build, zero warnings, commit
+- [x] `TranscriptionProvider` protocol + `TranscriptionConfiguration` + `Transcript`
+- [x] `MultipartFormEncoder` (pure, byte-for-byte testable)
+- [x] `OpenAITranscriptionProvider` (URLSession, configurable model, injectable session)
+- [x] `AppError` taxonomy: invalid key, timeout, offline, unsupported audio, rate limits (with Retry-After), server errors — all typed with friendly messages
+- [x] `OpenDictationTests` target (pulled forward from Milestone 9): 17 tests — multipart encoding + provider success/error mapping via URLProtocol stubs
+- [x] Build, zero warnings, tests green, commit
+- [ ] `TranscriptionService` orchestration (recording → upload → result) — moved to Milestone 5, where the flow gets its UI
 
 ## Milestone 5 — Transcript UI
 

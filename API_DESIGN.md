@@ -70,15 +70,23 @@ protocol HistoryStoring: Sendable {
 One user-presentable error type; providers map raw failures into it.
 
 ```swift
-enum AppError: LocalizedError {
+enum AppError: LocalizedError, Equatable {
+    // Recording
     case microphonePermissionDenied
-    case accessibilityPermissionDenied
-    case missingAPIKey
-    case invalidAPIKey                 // 401 from provider
-    case rateLimited(retryAfter: TimeInterval?)
-    case network(underlying: Error)    // offline, timeout
-    case providerError(message: String)
     case audioRecordingFailed
+    case audioFileUnreadable
+
+    // Transcription
+    case missingAPIKey
+    case invalidAPIKey                     // 401/403 from provider
+    case unsupportedAudio                  // 415, or 400 about the file/format
+    case rateLimited(retryAfter: TimeInterval?)  // 429 + Retry-After header
+    case networkUnavailable                // offline, DNS/connect failures
+    case requestTimedOut
+    case serverError(statusCode: Int)      // 5xx
+    case providerError(message: String)    // anything else, with the API's message
+
+    // accessibilityPermissionDenied joins in Milestone 6 (paste).
 }
 ```
 

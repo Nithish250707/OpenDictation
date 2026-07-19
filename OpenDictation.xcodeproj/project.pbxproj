@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		OD00001A00000000000000BA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = OD00000A00000000000000AA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = OD00000600000000000000A6;
+			remoteInfo = OpenDictation;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		OD00000100000000000000A1 /* OpenDictation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenDictation.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		OD00001100000000000000B1 /* OpenDictationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenDictationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +27,22 @@
 			path = OpenDictation;
 			sourceTree = "<group>";
 		};
+		OD00001000000000000000B0 /* OpenDictationTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OpenDictationTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		OD00000300000000000000A3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		OD00001700000000000000B7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				OD00000200000000000000A2 /* OpenDictation */,
+				OD00001000000000000000B0 /* OpenDictationTests */,
 				OD00000500000000000000A5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				OD00000100000000000000A1 /* OpenDictation.app */,
+				OD00001100000000000000B1 /* OpenDictationTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,29 @@
 			productReference = OD00000100000000000000A1 /* OpenDictation.app */;
 			productType = "com.apple.product-type.application";
 		};
+		OD00001200000000000000B2 /* OpenDictationTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = OD00001300000000000000B3 /* Build configuration list for PBXNativeTarget "OpenDictationTests" */;
+			buildPhases = (
+				OD00001600000000000000B6 /* Sources */,
+				OD00001700000000000000B7 /* Frameworks */,
+				OD00001800000000000000B8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				OD00001900000000000000B9 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				OD00001000000000000000B0 /* OpenDictationTests */,
+			);
+			name = OpenDictationTests;
+			packageProductDependencies = (
+			);
+			productName = OpenDictationTests;
+			productReference = OD00001100000000000000B1 /* OpenDictationTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +130,10 @@
 				TargetAttributes = {
 					OD00000600000000000000A6 = {
 						CreatedOnToolsVersion = 26.0;
+					};
+					OD00001200000000000000B2 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = OD00000600000000000000A6;
 					};
 				};
 			};
@@ -100,12 +152,20 @@
 			projectRoot = "";
 			targets = (
 				OD00000600000000000000A6 /* OpenDictation */,
+				OD00001200000000000000B2 /* OpenDictationTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		OD00000900000000000000A9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		OD00001800000000000000B8 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		OD00001600000000000000B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		OD00001900000000000000B9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = OD00000600000000000000A6 /* OpenDictation */;
+			targetProxy = OD00001A00000000000000BA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		OD00000C00000000000000AC /* Debug */ = {
@@ -301,6 +376,42 @@
 			};
 			name = Release;
 		};
+		OD00001400000000000000B4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.opendictation.OpenDictationTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenDictation.app/Contents/MacOS/OpenDictation";
+			};
+			name = Debug;
+		};
+		OD00001500000000000000B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.opendictation.OpenDictationTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenDictation.app/Contents/MacOS/OpenDictation";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -318,6 +429,15 @@
 			buildConfigurations = (
 				OD00000C00000000000000AC /* Debug */,
 				OD00000D00000000000000AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		OD00001300000000000000B3 /* Build configuration list for PBXNativeTarget "OpenDictationTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				OD00001400000000000000B4 /* Debug */,
+				OD00001500000000000000B5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
