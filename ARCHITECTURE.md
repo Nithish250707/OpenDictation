@@ -30,13 +30,14 @@ Open Dictation is a native SwiftUI menu bar app using **MVVM**, **protocol-orien
 
 | Component | Kind | Responsibility |
 |---|---|---|
-| `HotkeyManager` | Manager | Global shortcut via Carbon `RegisterEventHotKey` — the only zero-dependency API that needs no Accessibility permission |
-| `PanelManager` | Manager | Owns the floating popup: a non-activating `NSPanel` + `NSHostingView`, so keyboard focus stays in the target app |
-| `AudioRecordingService` | Service | `AVAudioRecorder` → `.m4a` (AAC), metering enabled for the waveform |
-| `TranscriptionService` | Service | Orchestrates provider calls; owns retry and error mapping |
-| `TranscriptionProvider` | Protocol | `transcribe(audioFileURL:) async throws -> Transcript`; OpenAI is one implementation (see [API_DESIGN.md](API_DESIGN.md)) |
+| `HotkeyManager` | Manager | Global shortcut via Carbon `RegisterEventHotKey` — the only zero-dependency API that needs no Accessibility permission; re-registered live when Settings changes it |
+| `FloatingPanelManager` | Manager | Owns the floating popup: a non-activating `NSPanel` + `NSHostingView`, so keyboard focus stays in the target app; applies panel opacity/appearance; generation-guarded hide animations |
+| `AVAudioRecordingService` | Service | `AVAudioRecorder` → temp `.m4a` (AAC), metering enabled for the waveform |
+| `TranscriptionService` | Service | Resolves provider + model + language from Settings and the API key from the Keychain, then hands off to the provider |
+| `TranscriptionProvider` | Protocol | `transcribe(audioFileURL:configuration:) async throws -> Transcript`; OpenAI is one implementation (see [API_DESIGN.md](API_DESIGN.md)) |
 | `KeychainService` | Service | API key storage via `SecItem*` — never UserDefaults, never logged |
-| `PasteboardService` | Service | Copy to `NSPasteboard`; paste = synthesized ⌘V `CGEvent` (Accessibility permission, graceful copy-only fallback) |
+| `PasteboardService` | Service | Clipboard writes (`NSPasteboard`), reporting success |
+| `PasteService` | Service | Permission gate → clipboard → synthesized ⌘V (`CGKeyEventSynthesizer`); typed errors for every failure mode |
 | `HistoryService` | Service | SwiftData `TranscriptionRecord` store in Application Support |
 | `SettingsStore` | Service | Single source of truth for preferences (`@Observable`, UserDefaults-backed, injectable suite). API keys never live here |
 | `ProviderRegistry` | Provider | Catalog of installed providers; Settings, the model picker, and the pipeline all read from it |
@@ -46,16 +47,16 @@ Open Dictation is a native SwiftUI menu bar app using **MVVM**, **protocol-orien
 
 ## Recording state machine
 
-`RecordingViewModel` drives one linear flow:
+`RecordingViewModel` drives one linear flow (see `RecordingState`):
 
 ```
-idle ──shortcut──▶ recording ──shortcut──▶ transcribing ──▶ transcript
-                                   │                            │
-                                   └────────▶ error ◀───────────┘
-                                          (Retry re-uploads kept audio)
+idle ──shortcut──▶ recording ──shortcut──▶ transcribing ──▶ transcript ──Done──▶ idle
+  │                                │            │               ▲
+  │                                │         Cancel          Retry│
+  └──▶ permissionDenied            └──────▶ failed ───────────────┘
 ```
 
-Audio files are deleted after successful transcription (privacy). `Retry` reuses the recorded file, so a network failure never loses a take.
+Audio files are deleted the moment they have no further purpose (privacy). `Retry` reuses the recorded file, so a network failure never loses a take; a result arriving after the user dismissed the popup is discarded. Double-starts through the async permission gap are guarded at both the view-model and audio-service layers.
 
 ## Project format
 

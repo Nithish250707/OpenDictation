@@ -25,7 +25,7 @@ xcodebuild -project OpenDictation.xcodeproj -scheme OpenDictation test
 
 1. Fork, then branch from `main`: `feature/short-description` or `fix/short-description`.
 2. Keep PRs focused — one logical change per PR.
-3. Make sure the project builds with **zero warnings** and all tests pass.
+3. Make sure the project builds with **zero warnings** and all tests pass — CI runs both on every PR.
 4. Add or update tests for behavior you change.
 5. Update documentation if your change affects it.
 6. Open a PR with a clear description of *what* and *why*.

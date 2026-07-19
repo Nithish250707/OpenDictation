@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.1.0] — 2026-07-19
+
+First release: the complete core loop — global shortcut → floating recorder → OpenAI transcription → transcript with copy/paste → local history — as a fully native, dependency-free macOS menu bar app. 88 tests, zero-warnings policy, CI on every PR.
+
 ### Fixed
 - Milestone 9 — Production hardening: a rapid double-press of the shortcut (or a press during the microphone permission prompt) can no longer start two recorders and leak a live mic capture; a new dictation started during the panel's fade-out can no longer have its panel hidden from under it; a recorder start failure now shows a friendly error instead of silently disappearing; the Transcribing state gained a Cancel button so a hung upload can't trap the user; the "Copied to clipboard" indicator now reflects whether the automatic copy actually succeeded; rapid Copy/Paste clicks no longer clear fresh feedback early; the Permissions polling task can no longer outlive its view model. System Settings deep links consolidated into one constant. 8 new regression tests (88 total).
 

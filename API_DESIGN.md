@@ -48,11 +48,16 @@ Adding a future provider (Groq, Deepgram, local Whisper…) = implement the prot
 
 ## Service protocols
 
+UI-adjacent services are `@MainActor` (they wrap main-thread-only system
+APIs); pure data services are `Sendable`.
+
 ```swift
-protocol AudioRecording: Sendable {
+@MainActor
+protocol AudioRecording: AnyObject {
     var isRecording: Bool { get }
-    func startRecording() async throws -> Void   // throws if mic permission denied
-    func stopRecording() async throws -> URL     // returns the recorded .m4a
+    func requestPermission() async -> Bool       // prompts on first use
+    func startRecording() throws -> URL          // temp .m4a being written
+    func stopRecording() -> URL?
     func currentPowerLevel() -> Float            // normalized 0…1 for the waveform
 }
 
@@ -60,21 +65,36 @@ protocol APIKeyStoring: Sendable {
     func save(_ key: String, for providerID: String) throws
     func key(for providerID: String) throws -> String?
     func deleteKey(for providerID: String) throws
+    // hasKey(for:) presence check provided via extension — UI never
+    // handles key material.
 }
 
-protocol PasteboardServicing: Sendable {
-    func copy(_ text: String)
-    /// Copies, then synthesizes ⌘V into the frontmost app.
-    /// - Returns: false if Accessibility permission is missing (text is still copied).
-    func paste(_ text: String) -> Bool
+@MainActor
+protocol PasteboardServicing: AnyObject {
+    @discardableResult
+    func copy(_ text: String) -> Bool
 }
 
-protocol HistoryStoring: Sendable {
+@MainActor
+protocol PasteServicing: AnyObject {
+    /// Permission gate → clipboard → synthesized ⌘V into the frontmost app.
+    /// Throws accessibilityPermissionDenied / pasteFailed.
+    func pasteToFocusedApp(_ text: String) throws
+}
+
+@MainActor
+protocol HistoryStoring: AnyObject {
     func save(_ transcript: Transcript) throws
     func records(matching query: String?) throws -> [TranscriptionRecord]
     func delete(_ record: TranscriptionRecord) throws
+    func deleteAll() throws
 }
 ```
+
+Smaller capability protocols follow the same pattern:
+`AccessibilityPermissionChecking`, `KeyEventSynthesizing`,
+`PermissionStatusChecking`, and `LoginItemManaging` — each with a live
+implementation and a test mock.
 
 ## Error taxonomy
 
@@ -112,13 +132,23 @@ Rules: every thrown error reaching a view model is an `AppError`; `errorDescript
 ## Dependency injection
 
 ```swift
+@MainActor
 struct AppDependencies {
+    let settings: SettingsStore              // @Observable, UserDefaults-backed
     let audio: any AudioRecording
-    let keychain: any APIKeyStoring
     let pasteboard: any PasteboardServicing
+    let paste: any PasteServicing
+    let accessibility: any AccessibilityPermissionChecking
+    let keyStore: any APIKeyStoring
+    let registry: ProviderRegistry
+    let transcription: TranscriptionService
+    let loginItems: any LoginItemManaging
+    let permissionStatus: any PermissionStatusChecking
     let history: any HistoryStoring
-    let transcription: TranscriptionService  // orchestrates providers
 }
 ```
 
-Built once in `OpenDictationApp`; view models receive exactly the dependencies they need through their initializers — never the whole container.
+`AppComposition` builds this graph exactly once at launch and shares it across
+the menu bar, recorder, History, and Settings scenes. View models receive
+exactly the dependencies they need through their initializers — never the
+whole container.

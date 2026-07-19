@@ -102,11 +102,13 @@ built incrementally in Milestones 4–8; this milestone became an audit.)
 - [x] Force-unwrap/force-cast audit: none remain except documented compile-time constants
 - [x] 8 new regression tests (88 total, 14 suites); zero warnings
 
-## Milestone 10 — Open Source Polish
+## Milestone 10 — Open Source Polish ✅
 
-- [ ] Refactor sweep (duplication, file sizes, naming)
-- [ ] App icon
-- [ ] README screenshots
-- [ ] CHANGELOG 0.1.0
-- [ ] Docs accuracy pass
-- [ ] Final commit / tag v0.1.0
+- [x] Refactor sweep (`PopupStatusView` extraction; naming/dead-code audit — all files under 300 lines)
+- [x] Production README (hero, badges, screenshot placeholders, install, privacy table, architecture, roadmap)
+- [x] Docs accuracy pass (ARCHITECTURE, API_DESIGN synced to shipped code)
+- [x] GitHub Actions CI (build + tests on every push/PR), issue forms, PR template
+- [x] LICENSE verified (MIT)
+- [x] CHANGELOG 0.1.0 + tag + GitHub release
+- [ ] App icon — deferred to v0.2 (needs design work)
+- [ ] README screenshots — placeholders in; real captures deferred to v0.2
