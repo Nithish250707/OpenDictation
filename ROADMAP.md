@@ -5,8 +5,8 @@
 | # | Milestone | Status |
 |---|---|---|
 | 1 | Project foundation — Xcode project, docs, blank app builds & launches | ✅ Done |
-| 2 | Menu bar app — MenuBarExtra, no Dock icon, app menu | ⏳ Next |
-| 3 | Recording engine — global shortcut, floating popup, audio capture, timer, waveform | Planned |
+| 2 | Menu bar app — MenuBarExtra, no Dock icon, app menu | ✅ Done |
+| 3 | Recording engine — global shortcut, floating popup, audio capture, timer, waveform | ⏳ Next |
 | 4 | OpenAI transcription — provider protocol, multipart upload, error handling | Planned |
 | 5 | Transcript UI — transcript state, Copy / Paste / Retry / Done | Planned |
 | 6 | Clipboard & paste — pasteboard service, ⌘V synthesis, Accessibility guidance | Planned |

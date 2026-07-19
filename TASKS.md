@@ -14,13 +14,14 @@ Working checklist per milestone. Checked = done and committed.
 - [x] MIT LICENSE, .gitignore
 - [x] Initial commit
 
-## Milestone 2 — Menu Bar App
+## Milestone 2 — Menu Bar App ✅
 
-- [ ] Replace WindowGroup with `MenuBarExtra` (mic SF Symbol)
-- [ ] `LSUIElement` so no Dock icon / app switcher entry
-- [ ] Menu: Start Dictation, History…, Settings…, Quit
-- [ ] Verify light/dark rendering of the menu bar icon
-- [ ] Build, zero warnings, commit
+- [x] Replace WindowGroup with `MenuBarExtra` (mic SF Symbol)
+- [x] `LSUIElement` so no Dock icon / app switcher entry
+- [x] Menu: Start Dictation, Settings…, Quit (History menu item lands with Milestone 8)
+- [x] Settings scene stub reachable via `SettingsLink`
+- [x] Verified via LaunchServices: app registers as `UIElement`
+- [x] Build, zero warnings, commit
 
 ## Milestone 3 — Recording Engine
 

@@ -2,14 +2,19 @@ import SwiftUI
 
 /// Application entry point.
 ///
-/// Milestone 1 shows a single placeholder window so the project has something
-/// visible to launch. Milestone 2 replaces this with a `MenuBarExtra` scene and
-/// removes the Dock presence (`LSUIElement`).
+/// Open Dictation lives exclusively in the menu bar: `LSUIElement` (set in the
+/// target's Info.plist keys) removes the Dock icon and app-switcher entry, and
+/// `MenuBarExtra` provides the status item. The Settings scene is opened from
+/// the menu via `SettingsLink`.
 @main
 struct OpenDictationApp: App {
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra("Open Dictation", systemImage: "mic.fill") {
+            MenuBarView()
+        }
+
+        Settings {
+            SettingsView()
         }
     }
 }
