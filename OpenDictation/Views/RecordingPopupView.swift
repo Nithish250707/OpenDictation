@@ -164,52 +164,36 @@ struct RecordingPopupView: View {
     }
 
     private func failure(_ error: AppError, canRetry: Bool) -> some View {
-        VStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 24))
-                .foregroundStyle(.orange)
+        PopupStatusView(
+            systemImage: "exclamationmark.triangle.fill",
+            iconColor: .orange,
             // Recording failures land here too, so keep the title generic.
-            Text("Something Went Wrong")
-                .font(.headline)
-            Text(error.localizedDescription)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            HStack(spacing: 8) {
-                Button("Cancel", action: onDismiss)
-                if canRetry {
-                    Button("Retry") {
-                        viewModel.retry()
-                    }
-                    .buttonStyle(.borderedProminent)
+            title: "Something Went Wrong",
+            message: error.localizedDescription
+        ) {
+            Button("Cancel", action: onDismiss)
+            if canRetry {
+                Button("Retry") {
+                    viewModel.retry()
                 }
+                .buttonStyle(.borderedProminent)
             }
-            .padding(.top, 4)
         }
     }
 
     private var permissionDenied: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "mic.slash.fill")
-                .font(.system(size: 24))
-                .foregroundStyle(.secondary)
-            Text("Microphone Access Needed")
-                .font(.headline)
-            Text("Allow Open Dictation to use the microphone in System Settings, then try again.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            HStack(spacing: 8) {
-                Button("Cancel", action: onDismiss)
-                Button("Open System Settings") {
-                    openMicrophonePrivacySettings()
-                    onDismiss()
-                }
-                .keyboardShortcut(.defaultAction)
+        PopupStatusView(
+            systemImage: "mic.slash.fill",
+            iconColor: .secondary,
+            title: "Microphone Access Needed",
+            message: "Allow Open Dictation to use the microphone in System Settings, then try again."
+        ) {
+            Button("Cancel", action: onDismiss)
+            Button("Open System Settings") {
+                openMicrophonePrivacySettings()
+                onDismiss()
             }
-            .controlSize(.small)
-            .padding(.top, 4)
+            .keyboardShortcut(.defaultAction)
         }
     }
 
