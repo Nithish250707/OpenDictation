@@ -16,6 +16,7 @@ struct AppDependencies {
     let loginItems: any LoginItemManaging
     let permissionStatus: any PermissionStatusChecking
     let history: any HistoryStoring
+    let updater: any UpdateManaging
 
     static func live() -> AppDependencies {
         let settings = SettingsStore()
@@ -34,7 +35,8 @@ struct AppDependencies {
             transcription: TranscriptionService(registry: registry, keyStore: keyStore, settings: settings),
             loginItems: LoginItemManager(),
             permissionStatus: SystemPermissionStatus(accessibility: accessibility),
-            history: HistoryService.live()
+            history: HistoryService.live(),
+            updater: SparkleUpdaterManager()
         )
     }
 }

@@ -42,7 +42,7 @@ Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`.
 
 ## Ground rules
 
-- Native only — no new dependencies without prior discussion in an issue. The bar is very high.
+- Native only — Sparkle (auto-updates) is the single sanctioned dependency; anything further needs prior discussion in an issue, and the bar is very high.
 - Privacy is non-negotiable: nothing that logs, stores, or transmits user content beyond the configured provider call.
 - v1 scope is frozen (see [PROJECT_SPEC.md](PROJECT_SPEC.md)); feature ideas go to [ROADMAP.md](ROADMAP.md) discussions, not PRs.
 

@@ -4,6 +4,7 @@ import SwiftUI
 struct GeneralSettingsView: View {
     @Bindable var settings: SettingsStore
     let loginItems: any LoginItemManaging
+    let updater: any UpdateManaging
 
     @State private var loginItemErrorMessage: String?
 
@@ -46,9 +47,35 @@ struct GeneralSettingsView: View {
             } footer: {
                 Text("Open Dictation is lightweight and lives only in your menu bar.")
             }
+
+            Section {
+                Toggle(isOn: automaticUpdatesBinding) {
+                    Label("Check for updates automatically", systemImage: "arrow.triangle.2.circlepath")
+                }
+                HStack {
+                    Label("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")", systemImage: "app.badge.checkmark")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Check Now") {
+                        updater.checkForUpdates()
+                    }
+                }
+            } header: {
+                Text("Updates")
+            } footer: {
+                Text("Updates are delivered from GitHub Releases and verified with EdDSA signatures before installing.")
+            }
         }
         .formStyle(.grouped)
         .animation(.default, value: loginItemErrorMessage)
+    }
+
+    private var automaticUpdatesBinding: Binding<Bool> {
+        Binding {
+            updater.automaticallyChecksForUpdates
+        } set: { enabled in
+            updater.automaticallyChecksForUpdates = enabled
+        }
     }
 
     private var launchAtLoginBinding: Binding<Bool> {

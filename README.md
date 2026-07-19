@@ -35,7 +35,8 @@ Dictation tools like Wispr Flow proved how transformative voice input can be —
 - 🕘 **Local history** with live search — stored only on your Mac
 - ⚙️ **Native Settings** — provider & model, 16 languages + auto-detect, shortcut, behavior toggles, panel appearance, live permission status
 - 🔐 **Keychain-only API key storage** — never on disk, never in logs, never displayed once saved
-- 🚀 Launch at login · menu-bar native · light & dark mode · zero third-party dependencies
+- 🔄 **Auto-updates** via Sparkle, delivered from GitHub Releases with signature verification
+- 🚀 Launch at login · menu-bar native · light & dark mode · exactly one dependency ([Sparkle](https://sparkle-project.org), for updates — everything else is pure Apple frameworks)
 
 ## Installation
 

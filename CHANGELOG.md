@@ -5,6 +5,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- Milestone 12 — Distribution: Sparkle 2 auto-updates fed from GitHub Releases (EdDSA-signed appcast served from the repo; updater initialized lazily so tests never trigger it), "Check for Updates…" in the menu bar and an Updates section in Settings → General; `Scripts/release.sh` builds a DMG via `hdiutil` with optional Developer ID signing and notarization (`CODESIGN_IDENTITY` / `NOTARY_PROFILE`); hardened-runtime microphone entitlement so notarized builds can record; versions bumped to 0.2.0 (build 2); RELEASING.md maintainer guide. Sparkle is the project's first and only dependency — there is no native framework for non-App-Store auto-updates.
+
 ### Changed
 - Milestone 11 — Premium UX polish (no new features): app icon (custom-drawn waveform on a gradient squircle); recorder capsule restyled with a gradient hairline border, refined typography and spacing, and blur-replace transitions between states; panel now enters with a fade + upward slide and exits with a fade + drop; waveform bars gained peak-hold smoothing (instant attack, gentle decay) and a vertical gradient; pulsing record indicator; error/permission states get tinted icon badges; first-run onboarding — a "Finish Setup — Add API Key…" menu item until a key exists, and the missing-key error now opens Settings directly.
 

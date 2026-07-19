@@ -2,6 +2,16 @@
 
 Working checklist per milestone. Checked = done and committed.
 
+## Milestone 12 — Distribution ✅
+
+- [x] Sparkle 2 via SPM (`SparkleUpdaterManager` behind `UpdateManaging`; lazy init keeps tests/CI update-free)
+- [x] GitHub Releases as the update feed: `appcast.xml` on main + EdDSA keys generated (private key in maintainer Keychain, public key in Info.plist)
+- [x] "Check for Updates…" menu item; Updates section in Settings → General (auto-check toggle, version, Check Now)
+- [x] `Scripts/release.sh`: Release build → sign (Developer ID or ad-hoc) → `hdiutil` DMG → optional notarize/staple → prints appcast signature; verified end-to-end unsigned
+- [x] Hardened-runtime mic entitlement (`OpenDictation.entitlements`) so notarized builds can record
+- [x] Custom Info.plist (feed URL + public key) merged with generated keys; membership exception so it isn't bundled as a resource
+- [x] Versions → 0.2.0 / build 2; RELEASING.md; zero warnings; 88/88 tests
+
 ## Milestone 11 — Premium UX ✅
 
 - [x] App icon: custom-drawn waveform on gradient squircle, all 10 sizes (no SF Symbols, per HIG)

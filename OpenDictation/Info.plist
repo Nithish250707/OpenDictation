@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Sparkle update feed; merged with the generated Info.plist keys. -->
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/Nithish250707/OpenDictation/main/appcast.xml</string>
+	<!-- EdDSA public key for update signature verification. The private key
+	     lives only in the maintainer's Keychain (see RELEASING.md). -->
+	<key>SUPublicEDKey</key>
+	<string>mMcvAfMTHLOFRMzCpH0Q/LqHp7qqL3Jx936HGcUWwDk=</string>
+</dict>
+</plist>

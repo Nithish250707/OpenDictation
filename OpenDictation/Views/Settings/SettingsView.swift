@@ -9,7 +9,8 @@ struct SettingsView: View {
         TabView {
             GeneralSettingsView(
                 settings: dependencies.settings,
-                loginItems: dependencies.loginItems
+                loginItems: dependencies.loginItems,
+                updater: dependencies.updater
             )
             .tabItem { Label("General", systemImage: "slider.horizontal.3") }
 

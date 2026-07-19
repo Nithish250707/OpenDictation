@@ -51,6 +51,12 @@ struct MenuBarView: View {
         .keyboardShortcut(",", modifiers: .command)
 
         Button {
+            dependencies.updater.checkForUpdates()
+        } label: {
+            Label("Check for Updates…", systemImage: "arrow.triangle.2.circlepath")
+        }
+
+        Button {
             NSApplication.shared.terminate(nil)
         } label: {
             Label("Quit Open Dictation", systemImage: "xmark.circle")

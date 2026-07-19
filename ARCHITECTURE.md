@@ -43,7 +43,12 @@ Open Dictation is a native SwiftUI menu bar app using **MVVM**, **protocol-orien
 | `ProviderRegistry` | Provider | Catalog of installed providers; Settings, the model picker, and the pipeline all read from it |
 | `LoginItemManager` | Manager | `SMAppService.mainApp` behind `LoginItemManaging` |
 | `SystemPermissionStatus` | Service | Non-prompting live permission readout (mic + Accessibility) for Settings |
+| `SparkleUpdaterManager` | Manager | Auto-updates behind `UpdateManaging`; Sparkle initialized lazily so tests never trigger checks |
 | `AppComposition` | App | Builds `AppDependencies` + `DictationController` once; shared by all scenes |
+
+## Dependency policy
+
+Exactly one third-party dependency: **Sparkle** (SPM), because macOS has no native framework for non-App-Store auto-updates. Everything else is Apple frameworks only, and the bar for adding anything further is very high (open an issue first).
 
 ## Recording state machine
 

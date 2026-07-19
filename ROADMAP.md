@@ -24,7 +24,8 @@ Each milestone ends with: clean build, zero warnings, refactor pass, docs update
 - Hotkey-conflict feedback in Settings (registration failures are currently log-only)
 - Free-form shortcut recorder (v1 ships curated presets)
 - History retention limit and a "don't save history" toggle
-- Notarized release builds
+- ~~Auto-updates + DMG pipeline~~ ✅ shipped in Milestone 12 (Sparkle, GitHub Releases feed)
+- Notarized release builds — tooling ready (`Scripts/release.sh`); needs a Developer ID certificate
 
 ## Beyond that (ideas, not commitments)
 
