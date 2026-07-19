@@ -23,15 +23,16 @@ Working checklist per milestone. Checked = done and committed.
 - [x] Verified via LaunchServices: app registers as `UIElement`
 - [x] Build, zero warnings, commit
 
-## Milestone 3 — Recording Engine
+## Milestone 3 — Recording Engine ✅
 
-- [ ] `HotkeyManager` (Carbon `RegisterEventHotKey`, default shortcut)
-- [ ] `PanelManager` — non-activating floating `NSPanel` hosting SwiftUI
-- [ ] `RecordingPopupView` + `RecordingViewModel` (state machine: idle → recording)
-- [ ] `AudioRecordingService` (`AVAudioRecorder`, .m4a, metering)
-- [ ] Microphone permission request + denied-state guidance
-- [ ] `RecordingTimerView`, `WaveformView` components
-- [ ] Build, zero warnings, commit
+- [x] `HotkeyManager` (Carbon `RegisterEventHotKey`, default ⌥Space)
+- [x] `FloatingPanelManager` — non-activating floating `NSPanel` hosting SwiftUI (never becomes key; stays above all windows; fade animations)
+- [x] `RecordingPopupView` + `RecordingViewModel` (state machine: idle → recording → stopped, plus permission-denied)
+- [x] `AVAudioRecordingService` (`AVAudioRecorder`, temp .m4a, metering)
+- [x] Microphone permission request + denied-state guidance (deep link to System Settings)
+- [x] `RecordingTimerView`, `WaveformView` components; recordings deleted on reset (no consumer until Milestone 4)
+- [x] `AppDependencies` + `DictationController` composition root; menu item toggles Start/Stop
+- [x] Build, zero warnings, commit
 
 ## Milestone 4 — OpenAI Transcription
 

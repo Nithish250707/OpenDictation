@@ -2,11 +2,16 @@ import SwiftUI
 
 /// Contents of the menu shown when the user clicks the menu bar icon.
 struct MenuBarView: View {
+    let controller: DictationController
+
     var body: some View {
         Button {
-            // Wired to the recording engine in Milestone 3.
+            controller.toggleDictation()
         } label: {
-            Label("Start Dictation", systemImage: "mic")
+            Label(
+                controller.isRecording ? "Stop Dictation" : "Start Dictation",
+                systemImage: controller.isRecording ? "stop.circle" : "mic"
+            )
         }
 
         Divider()
