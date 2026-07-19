@@ -12,7 +12,7 @@ struct OpenDictationApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuBarView(controller: composition.controller)
+            MenuBarView(controller: composition.controller, dependencies: composition.dependencies)
         } label: {
             // Template SF Symbols adapt to light/dark menu bars automatically.
             Image(systemName: composition.controller.isRecording ? "waveform" : "mic.fill")

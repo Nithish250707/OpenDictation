@@ -30,12 +30,16 @@ final class FloatingPanelManager {
         panel.setContentSize(hosting.fittingSize)
         position(panel)
 
+        // Enter with a fade plus a short upward slide.
+        let target = panel.frame.origin
+        panel.setFrameOrigin(NSPoint(x: target.x, y: target.y - 12))
         panel.alphaValue = 0
         panel.orderFrontRegardless()
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.18
+            context.duration = 0.22
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             panel.animator().alphaValue = settings.panelOpacity
+            panel.animator().setFrameOrigin(target)
         }
     }
 
@@ -51,9 +55,10 @@ final class FloatingPanelManager {
         guard let panel, panel.isVisible else { return }
         let generation = showGeneration
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.15
+            context.duration = 0.16
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             panel.animator().alphaValue = 0
+            panel.animator().setFrameOrigin(NSPoint(x: panel.frame.origin.x, y: panel.frame.origin.y - 8))
         }, completionHandler: {
             // AppKit calls the completion on the main thread; the SDK just
             // hasn't annotated it as such.

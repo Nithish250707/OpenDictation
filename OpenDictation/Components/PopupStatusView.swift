@@ -12,8 +12,10 @@ struct PopupStatusView<Actions: View>: View {
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: systemImage)
-                .font(.system(size: 24))
+                .font(.system(size: 19, weight: .semibold))
                 .foregroundStyle(iconColor)
+                .frame(width: 44, height: 44)
+                .background(iconColor.opacity(0.14), in: Circle())
             Text(title)
                 .font(.headline)
             Text(message)

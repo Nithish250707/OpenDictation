@@ -5,7 +5,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
-_Nothing yet._
+### Changed
+- Milestone 11 — Premium UX polish (no new features): app icon (custom-drawn waveform on a gradient squircle); recorder capsule restyled with a gradient hairline border, refined typography and spacing, and blur-replace transitions between states; panel now enters with a fade + upward slide and exits with a fade + drop; waveform bars gained peak-hold smoothing (instant attack, gentle decay) and a vertical gradient; pulsing record indicator; error/permission states get tinted icon badges; first-run onboarding — a "Finish Setup — Add API Key…" menu item until a key exists, and the missing-key error now opens Settings directly.
 
 ## [0.1.0] — 2026-07-19
 

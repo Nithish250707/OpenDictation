@@ -1,12 +1,14 @@
 import SwiftUI
 
-/// Content of the floating recorder panel. Renders whichever step of the
+/// Content of the floating recorder capsule. Renders whichever step of the
 /// dictation state machine is active; the panel window itself is managed by
 /// `FloatingPanelManager`.
 struct RecordingPopupView: View {
     let viewModel: RecordingViewModel
     let settings: SettingsStore
     let onDismiss: () -> Void
+
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         Group {
@@ -25,14 +27,38 @@ struct RecordingPopupView: View {
                 permissionDenied
             }
         }
-        .padding(24)
+        .id(stateKey)
+        .transition(.blurReplace)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
         .frame(width: settings.panelSize.width)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(.separator.opacity(0.5), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [.white.opacity(0.28), .white.opacity(0.06)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 1
+                )
         }
-        .animation(.spring(duration: 0.3), value: viewModel.state)
+        .animation(.smooth(duration: 0.3), value: stateKey)
+        .animation(.smooth(duration: 0.25), value: viewModel.needsAccessibilityPermission)
+    }
+
+    /// One key per state case so transitions fire on state *changes*, not on
+    /// every associated-value tick.
+    private var stateKey: String {
+        switch viewModel.state {
+        case .idle: "idle"
+        case .recording: "recording"
+        case .transcribing: "transcribing"
+        case .transcript: "transcript"
+        case .failed: "failed"
+        case .permissionDenied: "permissionDenied"
+        }
     }
 
     /// Shown for the instant between the shortcut press and the microphone
@@ -42,24 +68,32 @@ struct RecordingPopupView: View {
             ProgressView()
                 .controlSize(.small)
             Text("Starting…")
-                .font(.headline)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
         }
+        .padding(.vertical, 2)
     }
 
     private var recording: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "mic.fill")
-                    .foregroundStyle(.red)
-                    .symbolEffect(.pulse)
-                Text("Recording…")
-                    .font(.headline)
+        VStack(spacing: 14) {
+            HStack(spacing: 7) {
+                Circle()
+                    .fill(.red)
+                    .frame(width: 7, height: 7)
+                    .phaseAnimator([1.0, 0.25]) { dot, phase in
+                        dot.opacity(phase)
+                    } animation: { _ in
+                        .easeInOut(duration: 0.7)
+                    }
+                Text("Recording")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
             }
             RecordingTimerView(elapsed: viewModel.elapsed)
             WaveformView(levels: viewModel.levels)
-            Text("Press \(settings.shortcut.display) to stop")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text("\(settings.shortcut.display) to stop")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
     }
 
@@ -99,7 +133,7 @@ struct RecordingPopupView: View {
             }
             .frame(maxHeight: 150)
             .padding(10)
-            .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             if viewModel.autoCopied {
                 Label("Copied to clipboard", systemImage: "checkmark.circle")
@@ -112,12 +146,14 @@ struct RecordingPopupView: View {
                     viewModel.copyTranscript()
                 } label: {
                     Label(viewModel.justCopied ? "Copied" : "Copy", systemImage: viewModel.justCopied ? "checkmark" : "doc.on.doc")
+                        .contentTransition(.symbolEffect(.replace))
                 }
 
                 Button {
                     viewModel.pasteTranscript()
                 } label: {
                     Label(viewModel.justPasted ? "Pasted" : "Paste", systemImage: viewModel.justPasted ? "checkmark" : "arrow.down.doc")
+                        .contentTransition(.symbolEffect(.replace))
                         .frame(minWidth: 60)
                 }
                 .buttonStyle(.borderedProminent)
@@ -161,22 +197,42 @@ struct RecordingPopupView: View {
             }
             .controlSize(.small)
         }
+        .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
+    @ViewBuilder
     private func failure(_ error: AppError, canRetry: Bool) -> some View {
-        PopupStatusView(
-            systemImage: "exclamationmark.triangle.fill",
-            iconColor: .orange,
-            // Recording failures land here too, so keep the title generic.
-            title: "Something Went Wrong",
-            message: error.localizedDescription
-        ) {
-            Button("Cancel", action: onDismiss)
-            if canRetry {
-                Button("Retry") {
-                    viewModel.retry()
+        if error == .missingAPIKey {
+            // First-run onboarding: route straight to the fix.
+            PopupStatusView(
+                systemImage: "key.fill",
+                iconColor: .accentColor,
+                title: "Add Your API Key",
+                message: "Open Dictation needs your OpenAI API key to transcribe. It's stored only in your Mac's Keychain."
+            ) {
+                Button("Cancel", action: onDismiss)
+                Button("Open Settings…") {
+                    openSettings()
+                    NSApplication.shared.activate()
+                    onDismiss()
                 }
                 .buttonStyle(.borderedProminent)
+            }
+        } else {
+            PopupStatusView(
+                systemImage: "exclamationmark.triangle.fill",
+                iconColor: .orange,
+                // Recording failures land here too, so keep the title generic.
+                title: "Something Went Wrong",
+                message: error.localizedDescription
+            ) {
+                Button("Cancel", action: onDismiss)
+                if canRetry {
+                    Button("Retry") {
+                        viewModel.retry()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
         }
     }
@@ -190,14 +246,10 @@ struct RecordingPopupView: View {
         ) {
             Button("Cancel", action: onDismiss)
             Button("Open System Settings") {
-                openMicrophonePrivacySettings()
+                SystemSettingsDeepLink.open(SystemSettingsDeepLink.microphone)
                 onDismiss()
             }
             .keyboardShortcut(.defaultAction)
         }
-    }
-
-    private func openMicrophonePrivacySettings() {
-        SystemSettingsDeepLink.open(SystemSettingsDeepLink.microphone)
     }
 }

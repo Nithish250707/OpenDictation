@@ -2,6 +2,16 @@
 
 Working checklist per milestone. Checked = done and committed.
 
+## Milestone 11 — Premium UX ✅
+
+- [x] App icon: custom-drawn waveform on gradient squircle, all 10 sizes (no SF Symbols, per HIG)
+- [x] Recorder capsule restyle: gradient hairline border, refined spacing/typography, tinted icon badges in status states
+- [x] Blur-replace transitions between popup states; panel fade+slide entrance/exit
+- [x] Waveform: peak-hold smoothing in the view model, gradient bars, smooth animation
+- [x] Pulsing record indicator; larger rounded timer with numeric transitions
+- [x] Onboarding: "Finish Setup — Add API Key…" menu item until a key exists; missing-key error opens Settings directly
+- [x] Architecture unchanged; zero warnings; 88/88 tests green
+
 ## Milestone 1 — Project Foundation ✅
 
 - [x] Verify Xcode toolchain (`xcodebuild -version`)

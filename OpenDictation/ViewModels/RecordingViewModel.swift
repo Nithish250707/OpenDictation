@@ -250,6 +250,10 @@ final class RecordingViewModel {
         // so timer drift can't build up over a long dictation.
         elapsed = Date.now.timeIntervalSince(startedAt)
         levels.removeFirst()
-        levels.append(audio.currentPowerLevel())
+        // Instant attack, gentle decay: peaks land immediately but fall away
+        // smoothly, which reads far more naturally than raw meter samples.
+        let raw = audio.currentPowerLevel()
+        let previous = levels.last ?? 0
+        levels.append(max(raw, previous * 0.82))
     }
 }

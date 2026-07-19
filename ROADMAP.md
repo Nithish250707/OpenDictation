@@ -19,7 +19,8 @@ Each milestone ends with: clean build, zero warnings, refactor pass, docs update
 
 ## v0.2 candidates (from the v0.1 hardening audit)
 
-- App icon and README screenshots/GIF
+- ~~App icon~~ ✅ shipped in Milestone 11
+- README screenshots/GIF
 - Hotkey-conflict feedback in Settings (registration failures are currently log-only)
 - Free-form shortcut recorder (v1 ships curated presets)
 - History retention limit and a "don't save history" toggle
