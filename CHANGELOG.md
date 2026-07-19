@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.1.1] — 2026-07-19
+
+App icon, premium UX polish, Sparkle auto-updates, and the Keychain prompt fix. This is the first release carrying the custom app icon (v0.1.0 shipped before the icon existed, which is why its bundle had no Assets.car) and the first with the auto-update framework — future releases install in one click.
+
 ### Fixed
 - Keychain prompt audit: the app was performing a protected Keychain read on every menu open, every Settings visit, and every transcription — multiplying macOS "wants to use your confidential information" prompts, which recur across development rebuilds because ad-hoc signing changes the code signature the item's ACL was granted to. Now `CachedAPIKeyStore` caches the key in process memory after the first successful read (≤1 protected read per provider per launch; invalidated by save/delete, never persisted), and presence checks use attribute-only Keychain queries that never touch the protected secret, so they can't prompt at all. Root cause and guidance documented in the README's Troubleshooting section.
 
