@@ -17,3 +17,6 @@ xcuserdata/
 # Release artifacts
 build-release/
 dist/
+
+# Local, per-machine code-signing override (see Signing.xcconfig)
+Signing.local.xcconfig

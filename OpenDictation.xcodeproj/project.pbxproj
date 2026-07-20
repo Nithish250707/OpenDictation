@@ -21,6 +21,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		OD00002400000000000000C4 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		OD00000100000000000000A1 /* OpenDictation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenDictation.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		OD00001100000000000000B1 /* OpenDictationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenDictationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -73,6 +74,7 @@
 		OD00000400000000000000A4 = {
 			isa = PBXGroup;
 			children = (
+				OD00002400000000000000C4 /* Signing.xcconfig */,
 				OD00000200000000000000A2 /* OpenDictation */,
 				OD00001000000000000000B0 /* OpenDictationTests */,
 				OD00000500000000000000A5 /* Products */,
@@ -342,11 +344,11 @@
 		};
 		OD00000E00000000000000AE /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = OD00002400000000000000C4 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = OpenDictation/OpenDictation.entitlements;
-				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 2;

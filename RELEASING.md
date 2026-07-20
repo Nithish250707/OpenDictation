@@ -51,6 +51,25 @@ Maintainer guide for cutting a release with auto-update support.
    ```
    Ship order matters: upload the release asset **before** pushing the appcast, so the feed never points at a missing file.
 
+## Stable local signing (recommended for development)
+
+Ad-hoc dev builds get a new code signature (CDHash) on every rebuild, so macOS
+Accessibility and Keychain grants — which are keyed to that signature — break
+each time you rebuild, forcing you to re-grant. To make grants persist:
+
+1. **Keychain Access → Certificate Assistant → Create a Certificate…**
+   Name `OpenDictation Dev`, Identity Type **Self Signed Root**, Certificate
+   Type **Code Signing**.
+2. Create `Signing.local.xcconfig` in the repo root (it's git-ignored):
+   ```
+   CODE_SIGN_IDENTITY = OpenDictation Dev
+   ```
+3. Rebuild and grant Accessibility once. Every future build now shares the same
+   signing identity, so the grant persists.
+
+Without that file the project builds ad-hoc (`CODE_SIGN_IDENTITY = -`), so CI
+and other contributors are unaffected. See `Signing.xcconfig`.
+
 ## Gatekeeper reality check
 
 Until a Developer ID is configured, released builds are ad-hoc signed:

@@ -1,0 +1,18 @@
+// Code signing configuration.
+//
+// Ad-hoc by default ("-") so CI and contributors build with no certificate.
+//
+// For a STABLE local identity — so macOS Accessibility and Keychain grants
+// persist across rebuilds instead of breaking every time the ad-hoc CDHash
+// changes — create a git-ignored file next to this one called
+// `Signing.local.xcconfig` containing, for example:
+//
+//     CODE_SIGN_IDENTITY = OpenDictation Dev
+//
+// (where "OpenDictation Dev" is a self-signed Code Signing certificate you
+// create once in Keychain Access → Certificate Assistant → Create a
+// Certificate). The optional include below picks it up when present.
+
+CODE_SIGN_IDENTITY = -
+
+#include? "Signing.local.xcconfig"
