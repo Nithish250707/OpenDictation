@@ -55,7 +55,13 @@ Three scenes, all fed by the single `AppComposition`:
 - **`Window` ("Open Dictation")** — the desktop management app: a `NavigationSplitView` (`DesktopView`) with Home / History / AI Profiles / Dictionary / Settings. History and the four Settings section views are reused verbatim from the standalone flows.
 - **`Settings`** — the standard ⌘, preferences window (same section views), kept for muscle memory.
 
-The app launches as a menu-bar-only agent (`LSUIElement` → `.accessory`). Opening the desktop window promotes the process to `.regular` (Dock icon, app menu); closing it returns to `.accessory`. This keeps the background-agent launch and the floating recorder unchanged while making the management window feel like a first-class app.
+The app is registered as a menu-bar agent (`LSUIElement`), so it has no forced Dock icon and never quits on window close. On top of that, `AppDelegate` gives it first-class launch behavior:
+
+- **Launch** (Finder, Spotlight, Dock, Launchpad) → `applicationDidFinishLaunching` opens the desktop window.
+- **Relaunch / Dock click while running** → `applicationShouldHandleReopen` reopens the single existing window (no duplicate).
+- **Close the window** → the app keeps running in the menu bar (`applicationShouldTerminateAfterLastWindowClosed` → `false`).
+
+Opening the window promotes the process to `.regular` (Dock icon + app menu) via `DesktopView`; closing it returns to `.accessory` (menu-bar-only background agent). Because `openWindow` is only reachable inside the SwiftUI scene tree, `WindowCoordinator` bridges these AppKit lifecycle events to it — the always-alive menu bar label (`MenuBarLabel`) registers the open action, and the delegate invokes it (order-independent via a pending-open flag). The floating recorder and transcription pipeline are untouched.
 
 ## Dependency policy
 

@@ -10,6 +10,7 @@ import SwiftUI
 /// scene.
 @main
 struct OpenDictationApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var composition = AppComposition()
 
     var body: some Scene {
@@ -20,8 +21,10 @@ struct OpenDictationApp: App {
                 navigator: composition.navigator
             )
         } label: {
-            // Template SF Symbols adapt to light/dark menu bars automatically.
-            Image(systemName: composition.controller.isRecording ? "waveform" : "mic.fill")
+            MenuBarLabel(
+                isRecording: composition.controller.isRecording,
+                coordinator: appDelegate.windowCoordinator
+            )
         }
 
         Window("Open Dictation", id: WindowID.main) {
