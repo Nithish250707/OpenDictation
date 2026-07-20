@@ -35,8 +35,11 @@ struct PasteServiceTests {
         // Deferred until focus settles, so not posted synchronously…
         #expect(synthesizer.postCount == 0)
         #expect(pasteboard.copiedStrings == ["Hi"]) // clipboard already set
-        // …but delivered shortly after.
-        try await Task.sleep(for: .milliseconds(250))
+        // …but delivered shortly after. Poll rather than sleep a fixed amount,
+        // so a slow/contended CI runner can't flake the timing.
+        for _ in 0..<250 where synthesizer.postCount == 0 {
+            try await Task.sleep(for: .milliseconds(20))
+        }
         #expect(synthesizer.postCount == 1)
     }
 
