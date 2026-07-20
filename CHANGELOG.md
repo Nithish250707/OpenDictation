@@ -5,6 +5,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+- Keychain access audit (round two): saving or replacing the API key no longer issues a protected read — `KeychainService.save` now deletes-then-adds instead of reading the existing secret to decide update-vs-add, so saving can never trigger the "confidential information" prompt (and, as a bonus, re-owns the item under the current code signature, clearing stale-signature prompts after a dev rebuild). Confirmed by audit that no window/navigation/onboarding/rendering path reads the key: every UI presence check uses attribute-only queries, and the sole decrypting read is the once-per-process, cache-backed read during transcription. Documented the remaining development-only prompt (first transcription after an ad-hoc rebuild).
+
 ### Added
 - Milestone 14 — Desktop Experience 2.0 (UI/UX only, no new AI): a **command palette** (⌘K) to jump to any section or run actions with type-ahead search and arrow-key navigation; a **redesigned sidebar** with brand header, grouped navigation, and a quick "Start Dictation" footer; a **premium Home dashboard** with a hero call-to-action, sectioned layout, and onboarding; a **rich History screen** with time-range filters (All / Today / This Week), date-grouped cards, hover actions, and premium empty states; real **AI Profiles** and **Dictionary** screens (designed UI with sample preview data, clearly badged); **window state restoration** (size/position via frame autosave, last-viewed section); **`⌘1`–`⌘5` navigation** and a **Dock right-click menu** (Open, Start Dictation); reusable `EmptyStateView`. No change to recording, providers, history storage, updater, or the menu bar workflow. 13 new tests (114 total).
 

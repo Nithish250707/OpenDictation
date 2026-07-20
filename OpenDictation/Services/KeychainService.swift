@@ -10,19 +10,26 @@ struct KeychainService: APIKeyStoring {
 
     private static let service = "org.opendictation.OpenDictation"
 
+    /// Saves (or replaces) the key. Deletes any existing item first, then adds
+    /// a fresh one, so:
+    /// - No `kSecReturnData` read is issued — saving can never trigger the
+    ///   "wants to use your confidential information" prompt (unlike an
+    ///   update-vs-add existence check, which had to read the secret).
+    /// - The new item's access list is owned by the *current* code signature,
+    ///   which re-establishes access after a development rebuild changed it.
     func save(_ key: String, for providerID: String) throws {
         let data = Data(key.utf8)
 
-        if try self.key(for: providerID) != nil {
-            let update: [String: Any] = [kSecValueData as String: data]
-            let status = SecItemUpdate(baseQuery(for: providerID) as CFDictionary, update as CFDictionary)
-            guard status == errSecSuccess else { throw KeychainError.unexpectedStatus(status) }
-        } else {
-            var attributes = baseQuery(for: providerID)
-            attributes[kSecValueData as String] = data
-            let status = SecItemAdd(attributes as CFDictionary, nil)
-            guard status == errSecSuccess else { throw KeychainError.unexpectedStatus(status) }
+        // Delete is not a read, so it never prompts. Ignore "not found".
+        let deleteStatus = SecItemDelete(baseQuery(for: providerID) as CFDictionary)
+        guard deleteStatus == errSecSuccess || deleteStatus == errSecItemNotFound else {
+            throw KeychainError.unexpectedStatus(deleteStatus)
         }
+
+        var attributes = baseQuery(for: providerID)
+        attributes[kSecValueData as String] = data
+        let addStatus = SecItemAdd(attributes as CFDictionary, nil)
+        guard addStatus == errSecSuccess else { throw KeychainError.unexpectedStatus(addStatus) }
     }
 
     func key(for providerID: String) throws -> String? {

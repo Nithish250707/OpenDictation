@@ -29,4 +29,19 @@ struct KeychainServiceTests {
 
         try keychain.deleteKey(for: "test-never-existed-\(UUID().uuidString)")
     }
+
+    /// Saving must work (and replace) without ever reading the stored secret,
+    /// so it can't trigger a Keychain prompt.
+    @Test func savingReplacesWithoutReadingFirst() throws {
+        let keychain = KeychainService()
+        let providerID = "test-\(UUID().uuidString)"
+        defer { try? keychain.deleteKey(for: providerID) }
+
+        // Create, then replace — never calling key() before either save.
+        try keychain.save("sk-original", for: providerID)
+        try keychain.save("sk-replacement", for: providerID)
+
+        #expect(keychain.hasKey(for: providerID))
+        #expect(try keychain.key(for: providerID) == "sk-replacement")
+    }
 }

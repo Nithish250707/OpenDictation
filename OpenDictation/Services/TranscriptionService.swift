@@ -47,6 +47,12 @@ final class TranscriptionService {
 
     /// The Keychain is the real store. The environment override exists purely
     /// for development/CI, where seeding a keychain isn't practical.
+    ///
+    /// This is the **only** protected (decrypting) Keychain read in the app,
+    /// reached only while actually transcribing — never from the UI. It goes
+    /// through `CachedAPIKeyStore`, so the Keychain is touched at most once per
+    /// process (and not at all when the key was entered earlier this session,
+    /// since saving pre-populates the cache).
     private func resolveAPIKey(for providerID: String) -> String? {
         if let key = environment["OPENDICTATION_OPENAI_API_KEY"] ?? environment["OPENAI_API_KEY"],
            !key.isEmpty, providerID == "openai" {
