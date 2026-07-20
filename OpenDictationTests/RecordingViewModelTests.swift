@@ -275,7 +275,8 @@ struct RecordingViewModelTests {
         await harness.dictate()
 
         #expect(harness.synthesizer.postCount == 0)
-        #expect(harness.viewModel.needsAccessibilityPermission)
+        #expect(!harness.viewModel.accessibilityGranted)
+        #expect(harness.viewModel.shouldShowAccessibilityHelp)
         if case .transcript = harness.viewModel.state {} else {
             Issue.record("Expected to stay in .transcript, got \(harness.viewModel.state)")
         }
@@ -301,7 +302,8 @@ struct RecordingViewModelTests {
         #expect(harness.synthesizer.postCount == 1)
         #expect(harness.pasteboard.copiedStrings.last == "Paste me")
         #expect(harness.viewModel.justPasted)
-        #expect(!harness.viewModel.needsAccessibilityPermission)
+        #expect(harness.viewModel.accessibilityGranted)
+        #expect(!harness.viewModel.shouldShowAccessibilityHelp)
     }
 
     @Test func pasteWithoutPermissionShowsAccessibilityHelp() async {
@@ -311,12 +313,57 @@ struct RecordingViewModelTests {
         await harness.dictate()
         harness.viewModel.pasteTranscript()
 
-        #expect(harness.viewModel.needsAccessibilityPermission)
+        #expect(harness.viewModel.shouldShowAccessibilityHelp)
+        #expect(!harness.viewModel.accessibilityGranted)
         #expect(harness.synthesizer.postCount == 0)
         // Still in the transcript state — the user keeps their text.
         if case .transcript = harness.viewModel.state {} else {
             Issue.record("Expected to stay in .transcript, got \(harness.viewModel.state)")
         }
+    }
+
+    @Test func grantingAccessibilityClearsBannerAndEnablesPasteLive() async {
+        let harness = Harness(provider: .returning("Paste me"))
+        harness.permission.isGranted = false
+
+        await harness.dictate()
+        harness.viewModel.pasteTranscript() // denied → banner shows
+        #expect(!harness.viewModel.accessibilityGranted)
+        #expect(harness.viewModel.shouldShowAccessibilityHelp)
+
+        // The user grants it in System Settings and returns: the app must
+        // re-read AXIsProcessTrusted() and drop the banner immediately.
+        harness.permission.isGranted = true
+        harness.viewModel.refreshAccessibilityPermission()
+
+        #expect(harness.viewModel.accessibilityGranted)
+        #expect(!harness.viewModel.shouldShowAccessibilityHelp)
+    }
+
+    @Test func dismissingHelpHidesBannerButPasteStaysDisabled() async {
+        let harness = Harness(provider: .returning("x"))
+        harness.permission.isGranted = false
+
+        await harness.dictate()
+        #expect(harness.viewModel.shouldShowAccessibilityHelp)
+
+        harness.viewModel.dismissAccessibilityHelp()
+
+        #expect(!harness.viewModel.shouldShowAccessibilityHelp)
+        // Paste remains disabled — the permission itself hasn't changed.
+        #expect(!harness.viewModel.accessibilityGranted)
+    }
+
+    @Test func freshTranscriptReflectsCurrentPermission() async {
+        let harness = Harness(provider: .returning("x"))
+        harness.permission.isGranted = true
+
+        await harness.dictate()
+
+        // Even though the view model was created while granted, a transcript
+        // re-reads the live value.
+        #expect(harness.viewModel.accessibilityGranted)
+        #expect(!harness.viewModel.shouldShowAccessibilityHelp)
     }
 
     @Test func pasteSynthesisFailureShowsFriendlyMessageAndKeepsTranscript() async {
@@ -349,7 +396,7 @@ struct RecordingViewModelTests {
         harness.viewModel.pasteTranscript()
         harness.viewModel.reset()
 
-        #expect(!harness.viewModel.needsAccessibilityPermission)
+        #expect(!harness.viewModel.accessibilityHelpDismissed)
         #expect(harness.viewModel.pasteErrorMessage == nil)
         #expect(harness.viewModel.state == .idle)
     }

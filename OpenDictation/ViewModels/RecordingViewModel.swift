@@ -18,10 +18,19 @@ final class RecordingViewModel {
     /// True only when the automatic copy actually reached the clipboard —
     /// the UI must not claim "Copied" on the strength of the setting alone.
     private(set) var autoCopied = false
-    /// Set when Paste was attempted without Accessibility permission;
-    /// the transcript view shows inline guidance while this is true.
-    private(set) var needsAccessibilityPermission = false
+    /// Live mirror of `AXIsProcessTrusted()`, refreshed on app-active and
+    /// while watching for a grant. The Paste button and the guidance banner
+    /// derive from this — never from a cached "was denied once" flag.
+    private(set) var accessibilityGranted = false
+    /// Per-transcript UI dismissal of the guidance banner ("Not Now").
+    private(set) var accessibilityHelpDismissed = false
     private(set) var pasteErrorMessage: String?
+
+    /// Show the Accessibility guidance when Paste is unavailable and the user
+    /// hasn't dismissed it. Disappears the instant the permission is granted.
+    var shouldShowAccessibilityHelp: Bool {
+        !accessibilityGranted && !accessibilityHelpDismissed
+    }
 
     private let audio: any AudioRecording
     private let transcription: TranscriptionService
@@ -33,6 +42,7 @@ final class RecordingViewModel {
     private var meterTask: Task<Void, Never>?
     private var copyFeedbackTask: Task<Void, Never>?
     private var pasteFeedbackTask: Task<Void, Never>?
+    private var accessibilityWatchTask: Task<Void, Never>?
     /// Guards against a second `startRecording` racing the first through the
     /// async permission gap (e.g. the shortcut pressed twice quickly).
     private var isStarting = false
@@ -54,6 +64,7 @@ final class RecordingViewModel {
         self.settings = settings
         self.history = history
         self.levels = Array(repeating: 0, count: Self.waveformBarCount)
+        self.accessibilityGranted = accessibility.isGranted
     }
 
     // MARK: - Recording
@@ -129,6 +140,11 @@ final class RecordingViewModel {
             } catch {
                 Log.app.error("Couldn't save transcript to history: \(error.localizedDescription)")
             }
+            // Fresh transcript: re-read the live permission so the Paste
+            // button and banner are correct, and reset the per-transcript
+            // banner dismissal.
+            accessibilityHelpDismissed = false
+            refreshAccessibilityPermission()
             state = .transcript(transcript)
             if settings.autoPaste {
                 pasteTranscript()
@@ -182,7 +198,10 @@ final class RecordingViewModel {
                 self?.justPasted = false
             }
         } catch AppError.accessibilityPermissionDenied {
-            needsAccessibilityPermission = true
+            // The single source of truth said no. Reflect it live and start
+            // watching for the grant so the banner clears the moment it lands.
+            refreshAccessibilityPermission()
+            startAccessibilityWatch()
         } catch {
             // The transcript is already on the clipboard (auto-copied), so a
             // synthesis failure still leaves the user one ⌘V away.
@@ -190,12 +209,44 @@ final class RecordingViewModel {
         }
     }
 
+    /// Re-reads `AXIsProcessTrusted()` — the single source of truth for the
+    /// Accessibility permission. Call on app-active, when the transcript
+    /// appears, and while watching for a grant.
+    func refreshAccessibilityPermission() {
+        accessibilityGranted = accessibility.isGranted
+        if accessibilityGranted {
+            // A stale "couldn't paste" message must not outlive the grant.
+            if pasteErrorMessage == AppError.pasteFailed.localizedDescription {
+                pasteErrorMessage = nil
+            }
+            accessibilityWatchTask?.cancel()
+            accessibilityWatchTask = nil
+        }
+    }
+
     func openAccessibilitySettings() {
         accessibility.openSystemSettings()
+        // The recorder panel doesn't reliably receive app-active events, so
+        // poll for the grant while the user is over in System Settings.
+        startAccessibilityWatch()
     }
 
     func dismissAccessibilityHelp() {
-        needsAccessibilityPermission = false
+        accessibilityHelpDismissed = true
+    }
+
+    private func startAccessibilityWatch() {
+        guard accessibilityWatchTask == nil, !accessibilityGranted else { return }
+        accessibilityWatchTask = Task { [weak self] in
+            // ~60s of polling; refreshAccessibilityPermission cancels early on grant.
+            for _ in 0..<75 {
+                try? await Task.sleep(for: .milliseconds(800))
+                guard let self, !Task.isCancelled else { return }
+                self.refreshAccessibilityPermission()
+                if self.accessibilityGranted { return }
+            }
+            self?.accessibilityWatchTask = nil
+        }
     }
 
     /// Returns to `.idle`, deleting any audio that no longer has a purpose —
@@ -206,6 +257,8 @@ final class RecordingViewModel {
         copyFeedbackTask = nil
         pasteFeedbackTask?.cancel()
         pasteFeedbackTask = nil
+        accessibilityWatchTask?.cancel()
+        accessibilityWatchTask = nil
         switch state {
         case .transcribing(let url, _):
             deleteAudioFile(at: url)
@@ -219,8 +272,9 @@ final class RecordingViewModel {
         justCopied = false
         justPasted = false
         autoCopied = false
-        needsAccessibilityPermission = false
+        accessibilityHelpDismissed = false
         pasteErrorMessage = nil
+        refreshAccessibilityPermission()
         levels = Array(repeating: 0, count: Self.waveformBarCount)
     }
 

@@ -36,6 +36,11 @@ struct PermissionsSettingsView: View {
         .animation(.default, value: viewModel.accessibilityGranted)
         .onAppear { viewModel.startPolling() }
         .onDisappear { viewModel.stopPolling() }
+        // Instant refresh on returning from System Settings (in addition to
+        // the while-visible poll).
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            viewModel.refresh()
+        }
     }
 
     private func permissionRow(

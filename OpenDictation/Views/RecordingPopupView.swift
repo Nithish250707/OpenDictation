@@ -45,7 +45,15 @@ struct RecordingPopupView: View {
                 )
         }
         .animation(.smooth(duration: 0.3), value: stateKey)
-        .animation(.smooth(duration: 0.25), value: viewModel.needsAccessibilityPermission)
+        .animation(.smooth(duration: 0.25), value: viewModel.shouldShowAccessibilityHelp)
+        .animation(.smooth(duration: 0.2), value: viewModel.accessibilityGranted)
+        // Re-read AXIsProcessTrusted() when the popup appears and whenever the
+        // app becomes active (e.g. returning from System Settings), so the
+        // banner and Paste button reflect the live permission.
+        .onAppear { viewModel.refreshAccessibilityPermission() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            viewModel.refreshAccessibilityPermission()
+        }
     }
 
     /// One key per state case so transitions fire on state *changes*, not on
@@ -157,6 +165,11 @@ struct RecordingPopupView: View {
                         .frame(minWidth: 60)
                 }
                 .buttonStyle(.borderedProminent)
+                // Enabled only when AXIsProcessTrusted() is true.
+                .disabled(!viewModel.accessibilityGranted)
+                .help(viewModel.accessibilityGranted
+                      ? "Paste into the app you were using"
+                      : "Grant Accessibility access to enable pasting")
 
                 Spacer()
 
@@ -169,7 +182,7 @@ struct RecordingPopupView: View {
                     .foregroundStyle(.secondary)
             }
 
-            if viewModel.needsAccessibilityPermission {
+            if viewModel.shouldShowAccessibilityHelp {
                 accessibilityHelp
             }
         }
