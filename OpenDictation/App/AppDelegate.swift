@@ -29,4 +29,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Closing the desktop window hides it; the menu bar recorder stays.
         false
     }
+
+    /// Right-click Dock menu: quick access to the window and the recorder.
+    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+        let menu = NSMenu()
+
+        let open = NSMenuItem(title: "Open Open Dictation", action: #selector(dockOpen), keyEquivalent: "")
+        open.target = self
+        menu.addItem(open)
+
+        if windowCoordinator.startDictation != nil {
+            let dictate = NSMenuItem(title: "Start Dictation", action: #selector(dockStartDictation), keyEquivalent: "")
+            dictate.target = self
+            menu.addItem(dictate)
+        }
+        return menu
+    }
+
+    @objc private func dockOpen() {
+        windowCoordinator.reopen()
+    }
+
+    @objc private func dockStartDictation() {
+        windowCoordinator.startDictation?()
+    }
 }

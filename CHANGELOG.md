@@ -5,6 +5,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- Milestone 14 — Desktop Experience 2.0 (UI/UX only, no new AI): a **command palette** (⌘K) to jump to any section or run actions with type-ahead search and arrow-key navigation; a **redesigned sidebar** with brand header, grouped navigation, and a quick "Start Dictation" footer; a **premium Home dashboard** with a hero call-to-action, sectioned layout, and onboarding; a **rich History screen** with time-range filters (All / Today / This Week), date-grouped cards, hover actions, and premium empty states; real **AI Profiles** and **Dictionary** screens (designed UI with sample preview data, clearly badged); **window state restoration** (size/position via frame autosave, last-viewed section); **`⌘1`–`⌘5` navigation** and a **Dock right-click menu** (Open, Start Dictation); reusable `EmptyStateView`. No change to recording, providers, history storage, updater, or the menu bar workflow. 13 new tests (114 total).
+
 ### Changed
 - First-class launch behavior: launching Open Dictation (from Finder, Spotlight, Dock, or Launchpad) now opens the desktop management window automatically, instead of starting silently. Relaunching or clicking the Dock icon reopens the existing window rather than creating a duplicate, and closing the window leaves the app running in the menu bar with the recorder active (it returns to a background menu-bar agent, promoting to a Dock-visible app only while the window is open). Added a lightweight `AppDelegate` + `WindowCoordinator` to bridge AppKit launch/reopen events to SwiftUI's window opening; the recorder and transcription pipeline are unchanged.
 

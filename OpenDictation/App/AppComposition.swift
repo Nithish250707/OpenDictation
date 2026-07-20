@@ -13,5 +13,7 @@ final class AppComposition {
     init() {
         dependencies = .live()
         controller = DictationController(dependencies: dependencies)
+        // Restore the last-viewed sidebar section.
+        navigator.selection = DesktopSection(rawValue: dependencies.settings.lastDesktopSection) ?? .home
     }
 }

@@ -7,8 +7,14 @@ import Observation
 @Observable
 final class DesktopNavigator {
     var selection: DesktopSection? = .home
+    /// Drives the ⌘K command palette sheet.
+    var isCommandPalettePresented = false
 
     func go(to section: DesktopSection) {
         selection = section
+    }
+
+    func toggleCommandPalette() {
+        isCommandPalettePresented.toggle()
     }
 }

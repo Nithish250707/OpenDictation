@@ -28,10 +28,34 @@ struct OpenDictationApp: App {
         }
 
         Window("Open Dictation", id: WindowID.main) {
-            DesktopView(composition: composition)
+            DesktopView(
+                composition: composition,
+                windowCoordinator: appDelegate.windowCoordinator
+            )
         }
         .defaultSize(width: 920, height: 640)
         .windowResizability(.contentMinSize)
+        .commands {
+            CommandMenu("Go") {
+                Button("Command Palette") {
+                    composition.navigator.toggleCommandPalette()
+                }
+                .keyboardShortcut("k", modifiers: .command)
+
+                Divider()
+
+                Button("Home") { composition.navigator.go(to: .home) }
+                    .keyboardShortcut("1", modifiers: .command)
+                Button("History") { composition.navigator.go(to: .history) }
+                    .keyboardShortcut("2", modifiers: .command)
+                Button("AI Profiles") { composition.navigator.go(to: .aiProfiles) }
+                    .keyboardShortcut("3", modifiers: .command)
+                Button("Dictionary") { composition.navigator.go(to: .dictionary) }
+                    .keyboardShortcut("4", modifiers: .command)
+                Button("Settings") { composition.navigator.go(to: .settings) }
+                    .keyboardShortcut("5", modifiers: .command)
+            }
+        }
 
         Settings {
             SettingsView(dependencies: composition.dependencies)

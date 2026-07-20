@@ -1,8 +1,8 @@
 import SwiftData
 import SwiftUI
 
-/// Welcome dashboard: setup status, current configuration at a glance, quick
-/// actions, and recent dictations.
+/// Welcome dashboard: a hero with a primary action, setup status, current
+/// configuration at a glance, recent dictations, and tips.
 struct HomeView: View {
     let composition: AppComposition
 
@@ -24,20 +24,19 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                header
+            VStack(alignment: .leading, spacing: 26) {
+                hero
 
                 if !model.isFullyConfigured {
                     onboardingCard
                 }
 
-                statusTiles
-                quickActions
-                recentSection
-                tipsCard
+                section("Overview") { statusTiles }
+                section("Recent Dictations", trailing: recentTrailing) { recentContent }
+                section("Tips") { tipsContent }
             }
             .padding(28)
-            .frame(maxWidth: 820, alignment: .leading)
+            .frame(maxWidth: 860, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .navigationTitle("Home")
@@ -47,15 +46,28 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Hero
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(greeting)
-                .font(.largeTitle.weight(.bold))
-            Text("Press \(model.shortcutDisplay) anywhere to start dictating.")
-                .font(.title3)
-                .foregroundStyle(.secondary)
+    private var hero: some View {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(greeting)
+                    .font(.largeTitle.weight(.bold))
+                Text("Press \(model.shortcutDisplay) anywhere to dictate.")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            Button {
+                composition.controller.toggleDictation()
+            } label: {
+                Label("Start Dictation", systemImage: "mic.fill")
+                    .font(.body.weight(.medium))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+            }
+            .controlSize(.extraLarge)
+            .buttonStyle(.borderedProminent)
         }
     }
 
@@ -65,6 +77,26 @@ struct HomeView: View {
         case 12..<17: "Good afternoon"
         case 17..<22: "Good evening"
         default: "Welcome back"
+        }
+    }
+
+    // MARK: - Section scaffold
+
+    private func section<Content: View>(
+        _ title: String,
+        trailing: AnyView? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(title.uppercased())
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .kerning(0.5)
+                Spacer()
+                trailing
+            }
+            content()
         }
     }
 
@@ -136,79 +168,38 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Quick actions
-
-    private var quickActions: some View {
-        DashboardCard("Quick Actions") {
-            HStack(spacing: 10) {
-                Button {
-                    composition.controller.toggleDictation()
-                } label: {
-                    Label("Start Dictation", systemImage: "mic.fill")
-                }
-                .buttonStyle(.borderedProminent)
-
-                Button {
-                    composition.navigator.go(to: .settings)
-                } label: {
-                    Label("Settings", systemImage: "gearshape")
-                }
-
-                Button {
-                    composition.dependencies.updater.checkForUpdates()
-                } label: {
-                    Label("Check for Updates", systemImage: "arrow.triangle.2.circlepath")
-                }
-
-                Spacer(minLength: 0)
-            }
-        }
-    }
-
     // MARK: - Recent dictations
 
-    private var recentSection: some View {
-        DashboardCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Recent Dictations")
-                        .font(.headline)
-                    Spacer()
-                    if !model.recentRecords.isEmpty {
-                        Button("View All") {
-                            composition.navigator.go(to: .history)
-                        }
-                        .buttonStyle(.link)
-                    }
-                }
+    private var recentTrailing: AnyView? {
+        guard !model.recentRecords.isEmpty else { return nil }
+        return AnyView(
+            Button("View All") { composition.navigator.go(to: .history) }
+                .buttonStyle(.link)
+        )
+    }
 
-                if model.recentRecords.isEmpty {
-                    emptyRecent
-                } else {
-                    ForEach(Array(model.recentRecords.enumerated()), id: \.element.persistentModelID) { index, record in
-                        recentRow(record)
-                        if index < model.recentRecords.count - 1 {
-                            Divider()
-                        }
-                    }
+    @ViewBuilder
+    private var recentContent: some View {
+        if model.recentRecords.isEmpty {
+            DashboardCard {
+                HStack(spacing: 10) {
+                    Image(systemName: "waveform").foregroundStyle(.secondary)
+                    Text("Your dictations will appear here after your first transcription.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                }
+            }
+        } else {
+            VStack(spacing: 10) {
+                ForEach(model.recentRecords) { record in
+                    recentCard(record)
                 }
             }
         }
     }
 
-    private var emptyRecent: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "waveform")
-                .foregroundStyle(.secondary)
-            Text("Your dictations will appear here after your first transcription.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            Spacer(minLength: 0)
-        }
-        .padding(.vertical, 6)
-    }
-
-    private func recentRow(_ record: TranscriptionRecord) -> some View {
+    private func recentCard(_ record: TranscriptionRecord) -> some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(record.text)
@@ -233,17 +224,22 @@ struct HomeView: View {
             .buttonStyle(.borderless)
             .help("Copy transcript")
         }
-        .padding(.vertical, 4)
+        .padding(14)
+        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .strokeBorder(.separator.opacity(0.4), lineWidth: 1)
+        }
     }
 
     // MARK: - Tips
 
-    private var tipsCard: some View {
-        DashboardCard("Tips") {
+    private var tipsContent: some View {
+        DashboardCard {
             VStack(alignment: .leading, spacing: 8) {
-                tip("keyboard", "Press \(model.shortcutDisplay) from any app to dictate — the recorder floats above your work.")
+                tip("command", "Press ⌘K for the command palette — jump anywhere or run an action.")
+                tip("keyboard", "Press \(model.shortcutDisplay) from any app to dictate; the recorder floats above your work.")
                 tip("lock.shield", "Everything stays on your Mac. Audio goes straight to your provider and is deleted after.")
-                tip("arrow.triangle.2.circlepath", "Keep up to date from the menu bar or Settings → General.")
             }
         }
     }

@@ -23,14 +23,22 @@ struct DesktopSettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Settings section", selection: $tab) {
-                ForEach(Tab.allCases) { tab in
-                    Text(tab.title).tag(tab)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Settings")
+                    .font(.largeTitle.weight(.bold))
+
+                Picker("Settings section", selection: $tab) {
+                    ForEach(Tab.allCases) { tab in
+                        Text(tab.title).tag(tab)
+                    }
                 }
+                .pickerStyle(.segmented)
+                .labelsHidden()
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .padding(12)
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             Divider()
 

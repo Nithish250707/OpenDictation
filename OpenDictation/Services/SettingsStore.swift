@@ -17,6 +17,7 @@ final class SettingsStore {
         static let panelSize = "settings.panelSize"
         static let panelOpacity = "settings.panelOpacity"
         static let panelAppearance = "settings.panelAppearance"
+        static let lastDesktopSection = "settings.lastDesktopSection"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -63,6 +64,11 @@ final class SettingsStore {
         didSet { defaults.set(panelAppearance.rawValue, forKey: Key.panelAppearance) }
     }
 
+    /// Last-viewed desktop sidebar section, restored on next launch.
+    var lastDesktopSection: String {
+        didSet { defaults.set(lastDesktopSection, forKey: Key.lastDesktopSection) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         providerID = defaults.string(forKey: Key.providerID) ?? "openai"
@@ -77,5 +83,6 @@ final class SettingsStore {
         panelOpacity = defaults.object(forKey: Key.panelOpacity) as? Double ?? 1.0
         panelAppearance = defaults.string(forKey: Key.panelAppearance)
             .flatMap(PanelAppearanceMode.init(rawValue:)) ?? .system
+        lastDesktopSection = defaults.string(forKey: Key.lastDesktopSection) ?? "home"
     }
 }

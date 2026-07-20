@@ -2,6 +2,17 @@
 
 Working checklist per milestone. Checked = done and committed.
 
+## Milestone 14 — Desktop Experience 2.0 ✅
+
+- [x] Command palette (⌘K): `CommandPaletteView` + testable `CommandPaletteModel` (filter, arrow-nav, execute)
+- [x] Redesigned `SidebarView` (brand header, grouped nav, Start Dictation footer) + `⌘1`–`⌘5` and a "Go" menu
+- [x] Premium `HomeView` (hero CTA, sectioned hierarchy, onboarding, recent, tips)
+- [x] Rich `HistoryView` (time filters, date-grouped cards, hover actions) + `HistoryViewModel` filter/group logic
+- [x] Real `AIProfilesView` & `DictionaryView` with sample preview data (badged); reusable `EmptyStateView`
+- [x] Window state restoration: frame autosave (`WindowConfigurator`) + last section (`SettingsStore.lastDesktopSection`)
+- [x] Dock right-click menu (Open, Start Dictation) via `AppDelegate` + `WindowCoordinator`
+- [x] Recording pipeline / menu bar untouched; 13 new tests (114 total); zero warnings
+
 ## Milestone 13 — Desktop Experience ✅
 
 - [x] Desktop shell: `Window` scene + `NavigationSplitView` sidebar (`DesktopView`), agent still launches quiet; promotes to `.regular` only while open

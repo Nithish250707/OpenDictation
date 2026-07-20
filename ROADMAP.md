@@ -30,6 +30,7 @@ Each milestone ends with: clean build, zero warnings, refactor pass, docs update
 ## Shipped since v0.1
 
 - **Milestone 13 — Desktop app:** sidebar-driven management window (Home dashboard, History, Settings, placeholders for AI Profiles & Dictionary) alongside the menu-bar agent and floating recorder.
+- **Milestone 14 — Desktop Experience 2.0:** command palette (⌘K), redesigned sidebar and Home dashboard, rich filterable History, designed AI Profiles & Dictionary screens (preview data), window state restoration, Dock menu.
 
 ## Beyond that (ideas, not commitments)
 

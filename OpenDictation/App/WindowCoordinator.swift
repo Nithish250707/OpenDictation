@@ -13,6 +13,10 @@ final class WindowCoordinator {
     private var launchHandled = false
     private var pendingLaunchOpen = false
 
+    /// Set by the desktop window once it's live, so the Dock menu can trigger
+    /// dictation. Nil until then.
+    var startDictation: (() -> Void)?
+
     /// Supplied by a live SwiftUI view that owns an `openWindow` action.
     func register(open: @escaping () -> Void) {
         openAction = open

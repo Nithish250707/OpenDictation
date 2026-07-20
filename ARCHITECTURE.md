@@ -55,6 +55,8 @@ Three scenes, all fed by the single `AppComposition`:
 - **`Window` ("Open Dictation")** — the desktop management app: a `NavigationSplitView` (`DesktopView`) with Home / History / AI Profiles / Dictionary / Settings. History and the four Settings section views are reused verbatim from the standalone flows.
 - **`Settings`** — the standard ⌘, preferences window (same section views), kept for muscle memory.
 
+The desktop window uses a `NavigationSplitView` (`DesktopView` + `SidebarView`). A ⌘K **command palette** (`CommandPaletteView` + testable `CommandPaletteModel`) provides type-ahead navigation and actions. Window size/position is restored via a frame-autosave `WindowConfigurator`, and the last-viewed section via `SettingsStore.lastDesktopSection`. AI Profiles and Dictionary are designed, UI-only preview screens backed by sample data (`AIProfile`, `DictionaryEntry`).
+
 The app is registered as a menu-bar agent (`LSUIElement`), so it has no forced Dock icon and never quits on window close. On top of that, `AppDelegate` gives it first-class launch behavior:
 
 - **Launch** (Finder, Spotlight, Dock, Launchpad) → `applicationDidFinishLaunching` opens the desktop window.
