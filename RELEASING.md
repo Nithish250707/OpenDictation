@@ -58,14 +58,19 @@ Accessibility and Keychain grants — which are keyed to that signature — brea
 each time you rebuild, forcing you to re-grant. To make grants persist:
 
 1. **Keychain Access → Certificate Assistant → Create a Certificate…**
-   Name `OpenDictation Dev`, Identity Type **Self Signed Root**, Certificate
-   Type **Code Signing**.
-2. Create `Signing.local.xcconfig` in the repo root (it's git-ignored):
+   Name it (e.g. `Opendictation Dev`), Identity Type **Self Signed Root**,
+   Certificate Type **Code Signing**.
+2. Create `Signing.local.xcconfig` in the repo root (it's git-ignored), using
+   the certificate's exact Common Name:
    ```
-   CODE_SIGN_IDENTITY = OpenDictation Dev
+   CODE_SIGN_IDENTITY = Opendictation Dev
+   CODE_SIGN_STYLE = Manual
    ```
-3. Rebuild and grant Accessibility once. Every future build now shares the same
-   signing identity, so the grant persists.
+3. Rebuild and grant Accessibility once. The signature's designated requirement
+   is now keyed to the certificate (not the per-build CDHash), so every future
+   build shares the same identity and the grant — plus Keychain access —
+   persists. (The Debug config disables hardened runtime so the cert-signed
+   debug dylib loads; Release keeps it on for notarization.)
 
 Without that file the project builds ad-hoc (`CODE_SIGN_IDENTITY = -`), so CI
 and other contributors are unaffected. See `Signing.xcconfig`.
