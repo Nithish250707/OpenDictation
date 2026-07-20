@@ -35,19 +35,21 @@ final class FrontmostAppTracker: FrontmostAppTracking {
             return
         }
         target = frontmost
-        Log.paste.info("Captured paste target: \(frontmost.localizedName ?? "?", privacy: .public)")
+        PasteDiagnostics.stage("tracker: captured target=\(frontmost.localizedName ?? "?")", target: frontmost)
     }
 
     func activateTargetIfNeeded() -> Bool {
         guard let target, !target.isTerminated else {
-            Log.paste.info("No paste target to restore; pasting into current frontmost app")
+            PasteDiagnostics.stage("tracker: no captured target — will paste into current frontmost")
             return false
         }
         if target.processIdentifier == NSWorkspace.shared.frontmostApplication?.processIdentifier {
+            PasteDiagnostics.stage("tracker: target already frontmost — no reactivation", target: target)
             return false // already frontmost — no focus change needed
         }
-        Log.paste.info("Restoring focus to \(target.localizedName ?? "?", privacy: .public) before paste")
-        target.activate(from: .current)
+        PasteDiagnostics.stage("tracker: reactivating target", target: target)
+        let ok = target.activate(from: .current)
+        PasteDiagnostics.stage("tracker: activate(from:) returned \(ok)", target: target)
         return true
     }
 }

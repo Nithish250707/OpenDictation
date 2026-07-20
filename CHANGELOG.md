@@ -5,6 +5,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- Paste-pipeline diagnostics: `PasteDiagnostics` traces every stage of the paste path (clipboard write → target capture → focus reactivation → CGEvent creation → each `CGEvent.post` → completion) with timestamp, thread, current frontmost app, whether Open Dictation is active, and whether the target is active — to os_log and, in debug builds, `~/Library/Logs/OpenDictation/paste.log`. A `--diagnose-paste` debug launch flag drives the real pipeline against a TextEdit document (two scenarios: target-frontmost and Open-Dictation-frontmost) and verifies the pasted marker actually lands. Both scenarios pass, confirming the pipeline is mechanically correct: every instruction executes, and the synthesized ⌘V reaches the target app in both cases.
+
 ### Fixed
 - Auto-paste now targets the app you dictated from. Root cause: the paste pipeline synthesized ⌘V to whatever app was frontmost at that instant but never restored the app the user started dictating from — so when Open Dictation itself was frontmost at paste time (e.g. dictation started from the desktop window's "Start Dictation" button, or the desktop window was active), the keystroke landed in Open Dictation instead of the target. Fix: a `FrontmostAppTracker` captures the frontmost application when recording begins and reactivates it (letting focus settle) before synthesizing ⌘V; in the normal shortcut flow the target is already frontmost, so behavior is unchanged. Added `paste`-category stage logging (transcript finished → clipboard updated → autoPaste/accessibility flags → attempting → captured/restored target → paste succeeded/failed). Recording, transcription, and clipboard logic unchanged.
 

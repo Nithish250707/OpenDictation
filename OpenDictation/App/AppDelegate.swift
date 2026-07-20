@@ -29,6 +29,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         FileHandle.standardError.write(Data("[OpenDictation] AXIsProcessTrusted=\(trusted) executable=\(executable)\n".utf8))
         #endif
         windowCoordinator.openOnLaunch()
+
+        #if DEBUG
+        // Drive the real paste pipeline against TextEdit and trace every stage.
+        if CommandLine.arguments.contains("--diagnose-paste") {
+            Task { await PasteDiagnostics.runSelfTest() }
+        }
+        #endif
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

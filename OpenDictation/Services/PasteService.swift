@@ -44,44 +44,53 @@ final class PasteService: PasteServicing {
     }
 
     func pasteToFocusedApp(_ text: String) throws {
+        PasteDiagnostics.stage("paste: pasteToFocusedApp begin")
         // Query the permission immediately before pasting — never a cached value.
         let trusted = permission.isGranted
-        Log.paste.info("Paste requested (Accessibility trusted = \(trusted, privacy: .public))")
+        PasteDiagnostics.stage("paste: accessibility trusted = \(trusted)")
 
         guard trusted else {
-            Log.paste.error("Paste blocked: Accessibility not trusted for this process")
+            PasteDiagnostics.stage("paste: EARLY RETURN — not trusted")
             throw AppError.accessibilityPermissionDenied
         }
-        guard pasteboard.copy(text) else {
-            Log.paste.error("Paste blocked: clipboard write failed")
+        let copied = pasteboard.copy(text)
+        PasteDiagnostics.stage("paste: clipboard write = \(copied)")
+        guard copied else {
+            PasteDiagnostics.stage("paste: EARLY RETURN — clipboard write failed")
             throw AppError.pasteFailed
         }
 
         // Ensure the app the user dictated from receives the keystroke.
         let reactivated = focusTracker.activateTargetIfNeeded()
+        PasteDiagnostics.stage("paste: focus reactivation needed = \(reactivated)")
         if reactivated {
             // Activation is asynchronous; let the target become frontmost
             // before synthesizing ⌘V. The clipboard already holds the text, so
             // a failure here still leaves the user one manual ⌘V away.
-            Log.paste.info("Deferring ⌘V ~120ms for focus to settle")
+            PasteDiagnostics.stage("paste: deferring ⌘V ~120ms for focus to settle")
             Task { [weak self] in
                 try? await Task.sleep(for: .milliseconds(120))
-                guard let self else { return }
+                guard let self else {
+                    PasteDiagnostics.stage("paste: DEFERRED TASK EXITED EARLY — PasteService deallocated")
+                    return
+                }
+                PasteDiagnostics.stage("paste: deferred — posting now")
                 do {
                     try self.synthesizer.postCommandV()
-                    Log.paste.info("Paste succeeded: synthesized ⌘V (after focus restore)")
+                    PasteDiagnostics.stage("paste: deferred ⌘V complete")
                 } catch {
-                    Log.paste.error("Paste failed: keystroke synthesis error (after focus restore)")
+                    PasteDiagnostics.stage("paste: deferred ⌘V threw \(error)")
                 }
             }
+            PasteDiagnostics.stage("paste: pasteToFocusedApp returning (deferred path)")
             return
         }
 
         do {
             try synthesizer.postCommandV()
-            Log.paste.info("Paste succeeded: synthesized ⌘V")
+            PasteDiagnostics.stage("paste: synchronous ⌘V complete")
         } catch {
-            Log.paste.error("Paste failed: keystroke synthesis error")
+            PasteDiagnostics.stage("paste: synchronous ⌘V threw \(error)")
             throw error
         }
     }
