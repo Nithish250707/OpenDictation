@@ -5,6 +5,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+- Auto-paste now targets the app you dictated from. Root cause: the paste pipeline synthesized ⌘V to whatever app was frontmost at that instant but never restored the app the user started dictating from — so when Open Dictation itself was frontmost at paste time (e.g. dictation started from the desktop window's "Start Dictation" button, or the desktop window was active), the keystroke landed in Open Dictation instead of the target. Fix: a `FrontmostAppTracker` captures the frontmost application when recording begins and reactivates it (letting focus settle) before synthesizing ⌘V; in the normal shortcut flow the target is already frontmost, so behavior is unchanged. Added `paste`-category stage logging (transcript finished → clipboard updated → autoPaste/accessibility flags → attempting → captured/restored target → paste succeeded/failed). Recording, transcription, and clipboard logic unchanged.
+
 ### Added
 - Accessibility diagnostics: `paste`-category logging that records `AXIsProcessTrusted()` at launch (with the executable path), every paste attempt, and whether each paste succeeds or fails — so a persisting "Accessibility Access Needed" banner can be traced to whether the *running binary* is actually trusted. (Audit confirmed the app uses `AXIsProcessTrusted()` as the sole source of truth, checked immediately before each paste; a stale banner in development is caused by TCC keying the grant to a binary's code signature — different dev/rebuild binaries have different CDHashes, so a grant to one doesn't cover another. See README troubleshooting.) The recorder also now watches for a grant while any transcript is shown without permission, so the banner clears and Paste enables the instant `AXIsProcessTrusted()` becomes true.
 

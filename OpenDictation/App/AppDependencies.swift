@@ -30,7 +30,7 @@ struct AppDependencies {
             settings: settings,
             audio: AVAudioRecordingService(),
             pasteboard: pasteboard,
-            paste: PasteService(pasteboard: pasteboard, permission: accessibility),
+            paste: PasteService(pasteboard: pasteboard, permission: accessibility, focusTracker: FrontmostAppTracker()),
             accessibility: accessibility,
             keyStore: keyStore,
             registry: registry,

@@ -108,6 +108,24 @@ final class SpyKeyEventSynthesizer: KeyEventSynthesizing {
 }
 
 @MainActor
+final class MockFrontmostAppTracker: FrontmostAppTracking {
+    /// When true, `activateTargetIfNeeded` reports it had to switch focus
+    /// (which routes paste through the async deferred path).
+    var needsActivation = false
+    private(set) var captureCount = 0
+    private(set) var activateCount = 0
+
+    var targetName: String? { "Mock Target" }
+
+    func captureTarget() { captureCount += 1 }
+
+    func activateTargetIfNeeded() -> Bool {
+        activateCount += 1
+        return needsActivation
+    }
+}
+
+@MainActor
 final class MockLoginItemManager: LoginItemManaging {
     var isEnabled = false
     var nextError: Error?

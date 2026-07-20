@@ -6,10 +6,38 @@ import Testing
 struct PasteServiceTests {
     private let pasteboard = SpyPasteboard()
     private let permission = MockAccessibilityPermission()
+    private let focusTracker = MockFrontmostAppTracker()
     private let synthesizer = SpyKeyEventSynthesizer()
 
     private var service: PasteService {
-        PasteService(pasteboard: pasteboard, permission: permission, synthesizer: synthesizer)
+        PasteService(pasteboard: pasteboard, permission: permission, focusTracker: focusTracker, synthesizer: synthesizer)
+    }
+
+    @Test func capturesTargetAndRestoresFocusBeforePaste() throws {
+        permission.isGranted = true
+
+        service.captureTarget()
+        try service.pasteToFocusedApp("Hi")
+
+        #expect(focusTracker.captureCount == 1)
+        // The paste path always asks whether focus needs restoring.
+        #expect(focusTracker.activateCount == 1)
+        #expect(synthesizer.postCount == 1)
+    }
+
+    @Test func whenTargetNeedsActivationPasteIsDeferred() async throws {
+        permission.isGranted = true
+        focusTracker.needsActivation = true
+        let svc = service // retain the instance across the deferred paste
+
+        try svc.pasteToFocusedApp("Hi")
+
+        // Deferred until focus settles, so not posted synchronously…
+        #expect(synthesizer.postCount == 0)
+        #expect(pasteboard.copiedStrings == ["Hi"]) // clipboard already set
+        // …but delivered shortly after.
+        try await Task.sleep(for: .milliseconds(250))
+        #expect(synthesizer.postCount == 1)
     }
 
     @Test func grantedPermissionCopiesThenPostsCommandV() throws {

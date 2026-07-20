@@ -30,7 +30,7 @@ struct RecordingViewModelTests {
                 audio: audio,
                 transcription: transcription,
                 pasteboard: pasteboard,
-                paste: PasteService(pasteboard: pasteboard, permission: permission, synthesizer: synthesizer),
+                paste: PasteService(pasteboard: pasteboard, permission: permission, focusTracker: MockFrontmostAppTracker(), synthesizer: synthesizer),
                 accessibility: permission,
                 settings: settings,
                 history: history

@@ -74,6 +74,10 @@ final class RecordingViewModel {
         isStarting = true
         defer { isStarting = false }
 
+        // Remember the app the user is dictating from, while it's still
+        // frontmost, so a later auto-paste lands there — not in Open Dictation.
+        paste.captureTarget()
+
         guard await audio.requestPermission() else {
             state = .permissionDenied
             return
@@ -125,10 +129,12 @@ final class RecordingViewModel {
             // to probing the file, which can fail for exotic formats.
             if transcript.duration == 0 { transcript.duration = duration }
             deleteAudioFile(at: audioFileURL)
+            Log.paste.info("Transcript finished (\(transcript.text.count, privacy: .public) chars)")
             // The finished transcript goes straight to the clipboard so the
             // user can ⌘V immediately, even before touching the popup.
             if settings.autoCopy {
                 autoCopied = pasteboard.copy(transcript.text)
+                Log.paste.info("Clipboard updated = \(self.autoCopied, privacy: .public)")
                 if !autoCopied {
                     pasteErrorMessage = "Couldn't copy to the clipboard automatically. Use the Copy button."
                 }
@@ -150,7 +156,9 @@ final class RecordingViewModel {
             // user grants it (our button, System Settings, etc.).
             if !accessibilityGranted { startAccessibilityWatch() }
             state = .transcript(transcript)
+            Log.paste.info("autoPaste enabled = \(self.settings.autoPaste, privacy: .public), accessibility = \(self.accessibilityGranted, privacy: .public)")
             if settings.autoPaste {
+                Log.paste.info("Attempting auto-paste")
                 pasteTranscript()
             }
         } catch {
