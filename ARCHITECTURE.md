@@ -44,7 +44,18 @@ Open Dictation is a native SwiftUI menu bar app using **MVVM**, **protocol-orien
 | `LoginItemManager` | Manager | `SMAppService.mainApp` behind `LoginItemManaging` |
 | `SystemPermissionStatus` | Service | Non-prompting live permission readout (mic + Accessibility) for Settings |
 | `SparkleUpdaterManager` | Manager | Auto-updates behind `UpdateManaging`; Sparkle initialized lazily so tests never trigger checks |
-| `AppComposition` | App | Builds `AppDependencies` + `DictationController` once; shared by all scenes |
+| `DesktopNavigator` | ViewModel | Sidebar selection state so the menu bar can deep-link into a desktop section |
+| `AppComposition` | App | Builds `AppDependencies` + `DictationController` + `DesktopNavigator` once; shared by all scenes |
+
+## Scenes & windowing
+
+Three scenes, all fed by the single `AppComposition`:
+
+- **`MenuBarExtra`** — the always-present agent; entry point for dictation and for opening the desktop window.
+- **`Window` ("Open Dictation")** — the desktop management app: a `NavigationSplitView` (`DesktopView`) with Home / History / AI Profiles / Dictionary / Settings. History and the four Settings section views are reused verbatim from the standalone flows.
+- **`Settings`** — the standard ⌘, preferences window (same section views), kept for muscle memory.
+
+The app launches as a menu-bar-only agent (`LSUIElement` → `.accessory`). Opening the desktop window promotes the process to `.regular` (Dock icon, app menu); closing it returns to `.accessory`. This keeps the background-agent launch and the floating recorder unchanged while making the management window feel like a first-class app.
 
 ## Dependency policy
 

@@ -5,7 +5,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+- Milestone 13 — Desktop experience: a native sidebar-driven management window (Home / History / AI Profiles / Dictionary / Settings) opened from the menu bar. Home is a welcome dashboard with setup onboarding, current provider/language/launch status, quick actions, recent dictations, and tips. History and all four Settings sections are reused verbatim inside the window; AI Profiles and Dictionary are polished "coming soon" placeholders. The app still launches as a quiet menu-bar agent and promotes itself to a regular (Dock-visible) app only while the window is open, returning to accessory mode on close. The recorder, global shortcut, providers, history, updater, and permission flows are unchanged. 7 new tests (101 total).
 
 ## [0.1.1] — 2026-07-19
 

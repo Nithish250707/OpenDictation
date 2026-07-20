@@ -8,6 +8,7 @@ import Observation
 final class AppComposition {
     let dependencies: AppDependencies
     let controller: DictationController
+    let navigator = DesktopNavigator()
 
     init() {
         dependencies = .live()

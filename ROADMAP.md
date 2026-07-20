@@ -27,6 +27,10 @@ Each milestone ends with: clean build, zero warnings, refactor pass, docs update
 - ~~Auto-updates + DMG pipeline~~ ✅ shipped in Milestone 12 (Sparkle, GitHub Releases feed)
 - Notarized release builds — tooling ready (`Scripts/release.sh`); needs a Developer ID certificate
 
+## Shipped since v0.1
+
+- **Milestone 13 — Desktop app:** sidebar-driven management window (Home dashboard, History, Settings, placeholders for AI Profiles & Dictionary) alongside the menu-bar agent and floating recorder.
+
 ## Beyond that (ideas, not commitments)
 
 - Additional transcription providers (Groq, Deepgram, …) via the existing `TranscriptionProvider` protocol

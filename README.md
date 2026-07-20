@@ -14,9 +14,10 @@ Free, open source, and fully native. No Electron, no web views, no telemetry, no
 ![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey)
 ![Swift](https://img.shields.io/badge/Swift-6-orange)
 
-<!-- SCREENSHOT: recorder panel while dictating (docs/images/recording.png) -->
+<!-- SCREENSHOT: desktop Home dashboard with sidebar (docs/images/desktop-home.png) -->
+<!-- SCREENSHOT: floating recorder capsule while dictating (docs/images/recording.png) -->
 <!-- SCREENSHOT: transcript with Copy / Paste / Done (docs/images/transcript.png) -->
-<!-- SCREENSHOT: Settings window (docs/images/settings.png) -->
+<!-- SCREENSHOT: Settings (docs/images/settings.png) -->
 
 </div>
 
@@ -28,6 +29,7 @@ Dictation tools like Wispr Flow proved how transformative voice input can be —
 
 ## Features
 
+- 🖥 **Native desktop app** — a sidebar-driven management window (Home dashboard, History, Settings) that lives alongside the menu-bar agent; the floating recorder stays a lightweight overlay
 - 🎙 **Dictate anywhere** — a global shortcut (⌥Space by default) opens a small floating recorder over any app, without stealing your keyboard focus
 - 🌊 **Live waveform & timer** while you speak
 - ⚡️ **Fast transcription** via OpenAI's speech-to-text API (bring your own key; more providers on the roadmap)

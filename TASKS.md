@@ -2,6 +2,15 @@
 
 Working checklist per milestone. Checked = done and committed.
 
+## Milestone 13 — Desktop Experience ✅
+
+- [x] Desktop shell: `Window` scene + `NavigationSplitView` sidebar (`DesktopView`), agent still launches quiet; promotes to `.regular` only while open
+- [x] Sidebar navigation (`DesktopSection` + `DesktopNavigator`) with menu-bar deep links ("Open Open Dictation", "History…", "Finish Setup")
+- [x] Home dashboard (`HomeView`/`HomeViewModel`): onboarding checklist, provider/language/launch tiles, quick actions, recent dictations, tips
+- [x] History reused verbatim in the sidebar; Settings reused via segmented `DesktopSettingsView` (same four section views as the ⌘, Settings scene)
+- [x] `ComingSoonView` placeholders for AI Profiles & Dictionary; reusable `DashboardCard`/`StatTile`
+- [x] Recorder, providers, history, updater, permissions untouched; quiet accessory launch verified; 7 new tests (101 total); zero warnings
+
 ## Milestone 12 — Distribution ✅
 
 - [x] Sparkle 2 via SPM (`SparkleUpdaterManager` behind `UpdateManaging`; lazy init keeps tests/CI update-free)

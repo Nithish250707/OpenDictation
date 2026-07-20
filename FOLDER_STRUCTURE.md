@@ -6,6 +6,7 @@ OpenDictation/
 ├── OpenDictation/                # App target sources (folder-synchronized)
 │   ├── App/                      # @main entry, AppDelegate, AppDependencies (DI)
 │   ├── Views/                    # Screen-level SwiftUI views
+│   │   ├── Desktop/              # Desktop management window: shell, Home, placeholders, settings pane
 │   │   └── Settings/             # Settings window: shell + one view per tab
 │   ├── ViewModels/               # @MainActor state + intent, one per screen
 │   ├── Models/                   # Value types & SwiftData models (Transcript, TranscriptionRecord, RecordingState, AppError)

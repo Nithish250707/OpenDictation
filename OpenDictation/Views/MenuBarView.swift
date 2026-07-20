@@ -4,21 +4,28 @@ import SwiftUI
 struct MenuBarView: View {
     let controller: DictationController
     let dependencies: AppDependencies
+    let navigator: DesktopNavigator
 
     @Environment(\.openWindow) private var openWindow
-    @Environment(\.openSettings) private var openSettings
 
     private var needsAPIKey: Bool {
         !dependencies.keyStore.hasKey(for: dependencies.settings.providerID)
     }
 
     var body: some View {
+        Button {
+            openDesktop(.home)
+        } label: {
+            Label("Open Open Dictation", systemImage: "macwindow")
+        }
+
+        Divider()
+
         // Gentle first-run onboarding: surface the one missing step instead
         // of letting the first dictation end in an error.
         if needsAPIKey {
             Button {
-                openSettings()
-                NSApplication.shared.activate()
+                openDesktop(.settings)
             } label: {
                 Label("Finish Setup — Add API Key…", systemImage: "key.fill")
             }
@@ -38,9 +45,7 @@ struct MenuBarView: View {
         Divider()
 
         Button {
-            openWindow(id: WindowID.history)
-            // Menu-bar-only apps aren't active; activate so the window fronts.
-            NSApplication.shared.activate()
+            openDesktop(.history)
         } label: {
             Label("History…", systemImage: "clock.arrow.circlepath")
         }
@@ -56,11 +61,21 @@ struct MenuBarView: View {
             Label("Check for Updates…", systemImage: "arrow.triangle.2.circlepath")
         }
 
+        Divider()
+
         Button {
             NSApplication.shared.terminate(nil)
         } label: {
             Label("Quit Open Dictation", systemImage: "xmark.circle")
         }
         .keyboardShortcut("q", modifiers: .command)
+    }
+
+    /// Deep-links into the desktop window at a specific section, bringing the
+    /// app forward (it's a menu-bar agent, so it isn't active by default).
+    private func openDesktop(_ section: DesktopSection) {
+        navigator.go(to: section)
+        openWindow(id: WindowID.main)
+        NSApplication.shared.activate()
     }
 }
