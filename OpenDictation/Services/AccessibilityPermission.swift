@@ -11,8 +11,13 @@ protocol AccessibilityPermissionChecking: AnyObject {
 }
 
 final class AccessibilityPermission: AccessibilityPermissionChecking {
+    /// The single source of truth. `AXIsProcessTrusted()` reports whether *this
+    /// exact running binary* is trusted for Accessibility — the grant is keyed
+    /// to the executable's code signature, not just its bundle identifier.
     var isGranted: Bool {
-        AXIsProcessTrusted()
+        let trusted = AXIsProcessTrusted()
+        Log.paste.debug("AXIsProcessTrusted() -> \(trusted, privacy: .public)")
+        return trusted
     }
 
     func openSystemSettings() {

@@ -145,6 +145,10 @@ final class RecordingViewModel {
             // banner dismissal.
             accessibilityHelpDismissed = false
             refreshAccessibilityPermission()
+            // While a transcript is shown without permission, watch for a grant
+            // so the banner clears and Paste enables live — no matter how the
+            // user grants it (our button, System Settings, etc.).
+            if !accessibilityGranted { startAccessibilityWatch() }
             state = .transcript(transcript)
             if settings.autoPaste {
                 pasteTranscript()
@@ -214,6 +218,7 @@ final class RecordingViewModel {
     /// appears, and while watching for a grant.
     func refreshAccessibilityPermission() {
         accessibilityGranted = accessibility.isGranted
+        Log.paste.info("Refreshed Accessibility permission: granted=\(self.accessibilityGranted, privacy: .public)")
         if accessibilityGranted {
             // A stale "couldn't paste" message must not outlive the grant.
             if pasteErrorMessage == AppError.pasteFailed.localizedDescription {

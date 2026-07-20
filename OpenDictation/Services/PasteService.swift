@@ -32,12 +32,24 @@ final class PasteService: PasteServicing {
     }
 
     func pasteToFocusedApp(_ text: String) throws {
-        guard permission.isGranted else {
+        // Query the permission immediately before pasting — never a cached value.
+        let trusted = permission.isGranted
+        Log.paste.info("Paste requested (Accessibility trusted = \(trusted, privacy: .public))")
+
+        guard trusted else {
+            Log.paste.error("Paste blocked: Accessibility not trusted for this process")
             throw AppError.accessibilityPermissionDenied
         }
         guard pasteboard.copy(text) else {
+            Log.paste.error("Paste blocked: clipboard write failed")
             throw AppError.pasteFailed
         }
-        try synthesizer.postCommandV()
+        do {
+            try synthesizer.postCommandV()
+            Log.paste.info("Paste succeeded: synthesized ⌘V")
+        } catch {
+            Log.paste.error("Paste failed: keystroke synthesis error")
+            throw error
+        }
     }
 }

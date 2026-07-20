@@ -8,4 +8,5 @@ enum Log {
     static let app = Logger(subsystem: subsystem, category: "app")
     static let audio = Logger(subsystem: subsystem, category: "audio")
     static let hotkey = Logger(subsystem: subsystem, category: "hotkey")
+    static let paste = Logger(subsystem: subsystem, category: "paste")
 }
