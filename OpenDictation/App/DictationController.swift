@@ -12,6 +12,20 @@ final class DictationController {
     private let panelManager: FloatingPanelManager
     private let hotkeyManager = HotkeyManager()
 
+    /// What to do with a recording when the shortcut is released.
+    private enum ReleaseAction { case transcribe, discard }
+
+    /// A hold shorter than this counts as an accidental tap and is discarded,
+    /// so brushing the shortcut never fires a stray transcription.
+    private static let minimumHold: TimeInterval = 0.1
+
+    /// When the shortcut went down; nil when no hold is in progress.
+    private var holdStartedAt: Date?
+    /// Set when the key is released before the recorder finished spinning up
+    /// (behind the mic-permission await), so the release is honored the moment
+    /// recording actually begins.
+    private var pendingRelease: ReleaseAction?
+
     var isRecording: Bool { recordingViewModel.state.isRecording }
 
     init(dependencies: AppDependencies) {
@@ -26,14 +40,69 @@ final class DictationController {
             settings: dependencies.settings,
             history: dependencies.history
         )
+        // Hold-to-talk: the key going down starts recording, releasing it stops.
         hotkeyManager.onHotkeyPressed = { [weak self] in
-            self?.toggleDictation()
+            self?.handleHotkeyDown()
+        }
+        hotkeyManager.onHotkeyReleased = { [weak self] in
+            self?.handleHotkeyUp()
         }
         hotkeyManager.register(shortcut: settings.shortcut)
         observeShortcutChanges()
     }
 
-    /// Single entry point for the shortcut and the menu bar item.
+    // MARK: - Hold-to-talk
+
+    /// Shortcut pressed: begin recording immediately so the user's first word
+    /// is never clipped.
+    private func handleHotkeyDown() {
+        switch recordingViewModel.state {
+        case .recording, .transcribing:
+            // Key auto-repeat or an overlapping press; a hold is already active.
+            return
+        case .transcript, .failed, .permissionDenied:
+            // Clear a finished session's HUD before starting a fresh one.
+            dismiss()
+        case .idle:
+            break
+        }
+        pendingRelease = nil
+        holdStartedAt = .now
+        beginDictation()
+    }
+
+    /// Shortcut released: transcribe what was captured, unless the hold was too
+    /// brief to be intentional (then discard it).
+    private func handleHotkeyUp() {
+        guard let startedAt = holdStartedAt else { return }
+        holdStartedAt = nil
+        let held = Date.now.timeIntervalSince(startedAt)
+        let action: ReleaseAction = held < Self.minimumHold ? .discard : .transcribe
+        switch recordingViewModel.state {
+        case .recording:
+            apply(action)
+        case .idle:
+            // The recorder is still starting behind the permission await; run
+            // the release once startRecording() returns.
+            pendingRelease = action
+        default:
+            break
+        }
+    }
+
+    private func apply(_ action: ReleaseAction) {
+        switch action {
+        case .transcribe: recordingViewModel.stopAndTranscribe()
+        case .discard: cancelDictation()
+        }
+    }
+
+    private func cancelDictation() {
+        recordingViewModel.cancelRecording()
+        panelManager.hide()
+    }
+
+    /// Single entry point for the menu bar item (a click can't hold).
     func toggleDictation() {
         switch recordingViewModel.state {
         case .idle:
@@ -49,6 +118,8 @@ final class DictationController {
     }
 
     func dismiss() {
+        holdStartedAt = nil
+        pendingRelease = nil
         panelManager.hide()
         recordingViewModel.reset()
     }
@@ -61,9 +132,20 @@ final class DictationController {
         }
         Task {
             await recordingViewModel.startRecording()
-            // A failed start falls back to .idle; don't leave an empty panel up.
-            if case .idle = recordingViewModel.state {
-                panelManager.hide()
+            guard recordingViewModel.state.isRecording else {
+                // A failed start falls back to .idle; don't leave an empty
+                // panel up. Permission/error states keep their own HUD.
+                pendingRelease = nil
+                if case .idle = recordingViewModel.state {
+                    panelManager.hide()
+                }
+                return
+            }
+            // The key may have been released during the permission await —
+            // honor that release now that recording is actually running.
+            if let action = pendingRelease {
+                pendingRelease = nil
+                apply(action)
             }
         }
     }

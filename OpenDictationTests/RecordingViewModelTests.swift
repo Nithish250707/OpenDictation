@@ -103,6 +103,43 @@ struct RecordingViewModelTests {
         #expect(audioFileURL == nil)
     }
 
+    // MARK: - Cancel (hold-to-talk accidental tap)
+
+    @Test func cancelRecordingDiscardsAudioAndReturnsToIdle() async throws {
+        let harness = Harness()
+
+        await harness.viewModel.startRecording()
+        #expect(harness.viewModel.state.isRecording)
+        let audioURL = try #require(harness.audio.recordedFileURL)
+
+        harness.viewModel.cancelRecording()
+
+        #expect(harness.viewModel.state == .idle)
+        // An accidental tap must never leave audio on disk or hit the network.
+        #expect(!FileManager.default.fileExists(atPath: audioURL.path))
+    }
+
+    @Test func cancelRecordingWhenNotRecordingIsANoOp() async {
+        let harness = Harness()
+
+        harness.viewModel.cancelRecording()
+
+        #expect(harness.viewModel.state == .idle)
+    }
+
+    @Test func cancelledRecordingIsNeverTranscribedOrSaved() async throws {
+        let harness = Harness(provider: .returning("should not happen"))
+
+        await harness.viewModel.startRecording()
+        harness.viewModel.cancelRecording()
+        // Give any stray transcription task time to (not) run.
+        try await Task.sleep(for: .milliseconds(30))
+
+        #expect(harness.viewModel.state == .idle)
+        #expect(harness.history.saved.isEmpty)
+        #expect(harness.pasteboard.copiedStrings.isEmpty)
+    }
+
     // MARK: - Transcription
 
     @Test func stopProducesTranscriptAndDeletesAudio() async throws {
