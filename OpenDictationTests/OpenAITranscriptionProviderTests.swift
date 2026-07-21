@@ -37,6 +37,24 @@ struct OpenAITranscriptionProviderTests {
         #expect(contentType.hasPrefix("multipart/form-data; boundary="))
     }
 
+    @Test func requestSendsModelAndDeterministicTemperature() async throws {
+        let audioURL = try makeAudioFile()
+        nonisolated(unsafe) var capturedBody: Data?
+        StubURLProtocol.requestHandler = { request in
+            // URLProtocol exposes the streamed body via httpBodyStream.
+            capturedBody = request.readHTTPBody()
+            return (Self.httpResponse(status: 200), Data(#"{"text": "ok"}"#.utf8))
+        }
+
+        _ = try await provider.transcribe(audioFileURL: audioURL, configuration: configuration)
+
+        let body = String(decoding: try #require(capturedBody), as: UTF8.self)
+        #expect(body.contains(#"name="model""#))
+        #expect(body.contains("gpt-4o-transcribe"))
+        #expect(body.contains(#"name="temperature""#))
+        #expect(body.contains("0.0"))
+    }
+
     // MARK: - Typed failures
 
     @Test func emptyAPIKeyFailsWithoutNetworkCall() async throws {

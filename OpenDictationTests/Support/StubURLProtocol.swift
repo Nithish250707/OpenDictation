@@ -33,3 +33,25 @@ final class StubURLProtocol: URLProtocol {
 
     override func stopLoading() {}
 }
+
+extension URLRequest {
+    /// Reads the request body whether URLSession handed it over as data or as a
+    /// stream. URLProtocol almost always sees the streamed form, so tests that
+    /// need to inspect a multipart body must drain it here.
+    func readHTTPBody() -> Data? {
+        if let httpBody { return httpBody }
+        guard let stream = httpBodyStream else { return nil }
+        stream.open()
+        defer { stream.close() }
+        var data = Data()
+        let bufferSize = 4096
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+        defer { buffer.deallocate() }
+        while stream.hasBytesAvailable {
+            let read = stream.read(buffer, maxLength: bufferSize)
+            if read <= 0 { break }
+            data.append(buffer, count: read)
+        }
+        return data
+    }
+}

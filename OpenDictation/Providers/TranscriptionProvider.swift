@@ -30,10 +30,15 @@ struct TranscriptionConfiguration: Sendable {
     var model: String
     /// ISO-639-1 hint (e.g. "en"); `nil` lets the provider auto-detect.
     var language: String?
+    /// Sampling temperature (0…1). Dictation is clean, prepared speech, so we
+    /// decode at 0 for the most literal, deterministic transcript — this also
+    /// suppresses the hallucinated filler models can emit on near-silence.
+    var temperature: Double
 
-    init(apiKey: String, model: String, language: String? = nil) {
+    init(apiKey: String, model: String, language: String? = nil, temperature: Double = 0) {
         self.apiKey = apiKey
         self.model = model
         self.language = language
+        self.temperature = temperature
     }
 }
