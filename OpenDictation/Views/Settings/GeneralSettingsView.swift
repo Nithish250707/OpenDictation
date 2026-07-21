@@ -18,6 +18,14 @@ struct GeneralSettingsView: View {
                             ForEach(HotkeyShortcut.presets) { preset in
                                 Button(preset.display) { settings.shortcut = preset }
                             }
+                            Section("Hold a modifier (push-to-talk)") {
+                                if let rightOption = HotkeyShortcut.modifierKey(keyCode: 61) {
+                                    Button(rightOption.display) { settings.shortcut = rightOption }
+                                }
+                                if let globe = HotkeyShortcut.modifierKey(keyCode: 63) {
+                                    Button(globe.display) { settings.shortcut = globe }
+                                }
+                            }
                             Divider()
                             Button("Restore Default (⌥ Space)") { settings.shortcut = .optionSpace }
                         } label: {
@@ -32,10 +40,14 @@ struct GeneralSettingsView: View {
                 }
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Click the shortcut, then press any key or combination you like — a single key, a function key, or modifiers plus a key. Hold it anywhere on your Mac to dictate, then release to insert; a quick tap is ignored.")
+                    Text("Click the shortcut, then press what you like — a single key, a function key, modifiers plus a key, or a lone modifier held on its own (fn, Right ⌥…). Hold it anywhere on your Mac to dictate, then release to insert; a quick tap is ignored.")
                     if settings.shortcut.capturesABareTypingKey {
-                        Label("\(settings.shortcut.display) has no modifiers, so it's captured system-wide — you won't be able to type it normally. A function key or a modifier combo is safer.", systemImage: "exclamationmark.triangle.fill")
+                        Label("\(settings.shortcut.display) has no modifiers, so it's captured system-wide — you won't be able to type it normally. A function key, a lone modifier, or a combo is safer.", systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
+                    }
+                    if settings.shortcut.isModifierKey {
+                        Label("A lone modifier trigger (\(settings.shortcut.display)) needs Accessibility access to be detected — grant it in the Permissions tab.", systemImage: "lock.shield")
+                            .foregroundStyle(.secondary)
                     }
                 }
             }

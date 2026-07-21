@@ -1,20 +1,21 @@
 import AppKit
 import SwiftUI
 
-/// A macOS-style shortcut recorder. Click to arm it, then press any key
-/// combination — a single key, a function key, or modifiers plus a key — and it
-/// becomes the dictation shortcut. Escape cancels an in-progress recording.
+/// A macOS-style shortcut recorder. Click to arm it, then press what you want:
 ///
-/// Recording uses a local key-down monitor while armed, so it needs no special
-/// permission and captures whatever the user presses inside the app's own
-/// window. The captured key code and modifiers map straight onto Carbon's hot
-/// key API (the virtual key codes are identical), so anything recorded here is
-/// exactly what gets registered globally.
+/// - modifiers plus a key (e.g. ⌃⌥ D) or a single key/function key — captured
+///   from the key-down and registered as a Carbon hot key, or
+/// - a **lone modifier** (fn, Right ⌥, …) tapped on its own — captured from the
+///   flags change and run as a push-to-talk trigger.
+///
+/// Escape cancels. Capture uses a local monitor (no permission needed) inside
+/// the settings window; the runtime detection of a modifier trigger is what
+/// needs Accessibility, not this recorder.
 struct ShortcutRecorder: View {
     @Binding var shortcut: HotkeyShortcut
 
+    @State private var coordinator = ShortcutRecorderCoordinator()
     @State private var isRecording = false
-    @State private var monitor: Any?
 
     var body: some View {
         Button(action: toggle) {
@@ -25,7 +26,7 @@ struct ShortcutRecorder: View {
         }
         .buttonStyle(.bordered)
         .tint(isRecording ? .accentColor : nil)
-        .help(isRecording ? "Press any key or combination — Escape cancels" : "Click, then press your shortcut")
+        .help(isRecording ? "Press any key, combination, or a lone modifier — Escape cancels" : "Click, then press your shortcut")
         .onDisappear(perform: stop)
     }
 
@@ -34,40 +35,104 @@ struct ShortcutRecorder: View {
     }
 
     private func start() {
+        coordinator.onRecorded = { recorded in
+            shortcut = recorded
+            isRecording = false
+        }
+        coordinator.onCancelled = { isRecording = false }
+        coordinator.start()
         isRecording = true
-        // Return nil from the handler to swallow the key press so it doesn't
-        // beep or type into the settings window while we're capturing it.
-        monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
-            handle(event)
+    }
+
+    private func stop() {
+        coordinator.stop()
+        isRecording = false
+    }
+}
+
+/// Owns the key monitor and the transient state needed to tell a lone-modifier
+/// tap apart from a modifier+key combo while recording.
+@MainActor
+final class ShortcutRecorderCoordinator {
+    var onRecorded: ((HotkeyShortcut) -> Void)?
+    var onCancelled: (() -> Void)?
+
+    private var monitor: Any?
+    /// A modifier held on its own; recorded as push-to-talk if released before
+    /// any other key or modifier joins it.
+    private var armedModifierKeyCode: UInt16?
+
+    func start() {
+        stop()
+        // Return nil from the handler to swallow the event so nothing types or
+        // beeps into the settings window while we capture it.
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] event in
+            self?.handle(event)
             return nil
         }
     }
 
-    private func handle(_ event: NSEvent) {
-        let carbon = Self.carbonModifiers(from: event.modifierFlags)
-        // Escape on its own cancels; ⌘Escape (etc.) is a legitimate shortcut.
-        if event.keyCode == 53, carbon == 0 {
-            stop()
-            return
-        }
-        guard let keyName = Self.keyName(for: event) else { return }
-        shortcut = HotkeyShortcut(
-            keyCode: UInt32(event.keyCode),
-            carbonModifiers: carbon,
-            display: HotkeyShortcut.makeDisplay(carbonModifiers: carbon, keyName: keyName)
-        )
-        stop()
-    }
-
-    private func stop() {
+    func stop() {
         if let monitor {
             NSEvent.removeMonitor(monitor)
         }
         monitor = nil
-        isRecording = false
+        armedModifierKeyCode = nil
     }
 
-    // MARK: - Event → shortcut
+    private func handle(_ event: NSEvent) {
+        switch event.type {
+        case .keyDown: handleKeyDown(event)
+        case .flagsChanged: handleFlagsChanged(event)
+        default: break
+        }
+    }
+
+    private func handleKeyDown(_ event: NSEvent) {
+        // A real key press means this isn't a lone modifier — it's a combo.
+        armedModifierKeyCode = nil
+        let carbon = Self.carbonModifiers(from: event.modifierFlags)
+        // Escape on its own cancels; ⌘Escape (etc.) is a legitimate shortcut.
+        if event.keyCode == 53, carbon == 0 {
+            onCancelled?()
+            stop()
+            return
+        }
+        guard let keyName = Self.keyName(for: event) else { return }
+        record(HotkeyShortcut(
+            keyCode: UInt32(event.keyCode),
+            carbonModifiers: carbon,
+            display: HotkeyShortcut.makeDisplay(carbonModifiers: carbon, keyName: keyName)
+        ))
+    }
+
+    private func handleFlagsChanged(_ event: NSEvent) {
+        let keyCode = UInt32(event.keyCode)
+        guard HotkeyShortcut.modifierKeyCodes.contains(keyCode),
+              let mask = HotkeyShortcut.modifierKeyMask(for: keyCode) else {
+            return // e.g. Caps Lock, or a key we don't offer as a trigger
+        }
+        let isDown = event.modifierFlags.rawValue & mask != 0
+        if isDown {
+            // Arm on the first lone modifier; a second one means a combo is
+            // being built, so disarm and wait for the key-down instead.
+            armedModifierKeyCode = armedModifierKeyCode == nil ? UInt16(keyCode) : nil
+        } else if armedModifierKeyCode == UInt16(keyCode) {
+            // Tapped and released on its own → a push-to-talk modifier trigger.
+            if let recorded = HotkeyShortcut.modifierKey(keyCode: keyCode) {
+                record(recorded)
+            }
+        } else {
+            armedModifierKeyCode = nil
+        }
+    }
+
+    private func record(_ shortcut: HotkeyShortcut) {
+        onRecorded?(shortcut)
+        stop()
+    }
+
+    // MARK: - Event parsing
 
     private static func carbonModifiers(from flags: NSEvent.ModifierFlags) -> UInt32 {
         var carbon: UInt32 = 0

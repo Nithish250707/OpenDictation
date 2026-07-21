@@ -11,6 +11,7 @@ final class DictationController {
     private let settings: SettingsStore
     private let panelManager: FloatingPanelManager
     private let hotkeyManager = HotkeyManager()
+    private let modifierMonitor = ModifierKeyMonitor()
 
     /// What to do with a recording when the shortcut is released.
     private enum ReleaseAction { case transcribe, discard }
@@ -44,15 +45,36 @@ final class DictationController {
             history: dependencies.history
         )
         // Hold-to-talk: the key going down starts recording, releasing it stops.
+        // Both mechanisms — the Carbon hot key and the modifier-key monitor —
+        // funnel into the same press/release handlers.
         hotkeyManager.onHotkeyPressed = { [weak self] in
             self?.handleHotkeyDown()
         }
         hotkeyManager.onHotkeyReleased = { [weak self] in
             self?.handleHotkeyUp()
         }
-        hotkeyManager.register(shortcut: settings.shortcut)
+        modifierMonitor.onPressed = { [weak self] in
+            self?.handleHotkeyDown()
+        }
+        modifierMonitor.onReleased = { [weak self] in
+            self?.handleHotkeyUp()
+        }
+        applyShortcut(settings.shortcut)
         observeShortcutChanges()
         observeStateForHUD()
+    }
+
+    /// Routes the current shortcut to the right mechanism: a lone modifier is
+    /// watched via the flags-change monitor (needs Accessibility); anything
+    /// else registers as a Carbon hot key. Only one is ever active.
+    private func applyShortcut(_ shortcut: HotkeyShortcut) {
+        if shortcut.isModifierKey, let mask = HotkeyShortcut.modifierKeyMask(for: shortcut.keyCode) {
+            hotkeyManager.unregister()
+            modifierMonitor.start(keyCode: shortcut.keyCode, mask: mask)
+        } else {
+            modifierMonitor.stop()
+            hotkeyManager.register(shortcut: shortcut)
+        }
     }
 
     // MARK: - Hold-to-talk
@@ -207,7 +229,7 @@ final class DictationController {
                 // Explicit self: older Swift 6 compilers (CI's Xcode 16.x)
                 // require it through this nested escaping closure.
                 guard let self else { return }
-                self.hotkeyManager.register(shortcut: self.settings.shortcut)
+                self.applyShortcut(self.settings.shortcut)
                 self.observeShortcutChanges()
             }
         }

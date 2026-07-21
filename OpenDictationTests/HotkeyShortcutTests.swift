@@ -65,4 +65,43 @@ struct HotkeyShortcutTests {
         #expect(!bareFunction.capturesABareTypingKey)
         #expect(!HotkeyShortcut.optionSpace.capturesABareTypingKey)
     }
+
+    // MARK: - Modifier-key (push-to-talk) triggers
+
+    @Test func modifierKeyMaskAndNameCoverTheSupportedKeys() {
+        #expect(HotkeyShortcut.modifierKeyName(for: 61) == "Right ⌥")
+        #expect(HotkeyShortcut.modifierKeyMask(for: 61) == 0x40)
+        #expect(HotkeyShortcut.modifierKeyName(for: 63) == "fn")
+        #expect(HotkeyShortcut.modifierKeyMask(for: 63) == 0x80_0000)
+        // An ordinary key is not a modifier trigger.
+        #expect(HotkeyShortcut.modifierKeyName(for: 2) == nil)
+        #expect(HotkeyShortcut.modifierKeyMask(for: 2) == nil)
+        #expect(!HotkeyShortcut.modifierKeyCodes.contains(2))
+    }
+
+    @Test func modifierKeyFactoryBuildsAPushToTalkTrigger() throws {
+        let rightOption = try #require(HotkeyShortcut.modifierKey(keyCode: 61))
+        #expect(rightOption.isModifierKey)
+        #expect(rightOption.carbonModifiers == 0)
+        #expect(rightOption.display == "Right ⌥")
+        // A modifier trigger is never treated as a bare-typing-key footgun.
+        #expect(!rightOption.capturesABareTypingKey)
+        // A non-modifier key code yields nothing.
+        #expect(HotkeyShortcut.modifierKey(keyCode: 2) == nil)
+    }
+
+    @Test func modifierKeyRoundTripsThroughCodable() throws {
+        let trigger = try #require(HotkeyShortcut.modifierKey(keyCode: 63))
+        let decoded = try JSONDecoder().decode(HotkeyShortcut.self, from: JSONEncoder().encode(trigger))
+        #expect(decoded == trigger)
+        #expect(decoded.isModifierKey)
+    }
+
+    @Test func legacyShortcutWithoutModifierFlagStillDecodes() throws {
+        // Data persisted before isModifierKey existed must not be discarded.
+        let legacy = Data(#"{"keyCode":49,"carbonModifiers":2048,"display":"⌥ Space"}"#.utf8)
+        let decoded = try JSONDecoder().decode(HotkeyShortcut.self, from: legacy)
+        #expect(decoded == .optionSpace)
+        #expect(!decoded.isModifierKey)
+    }
 }

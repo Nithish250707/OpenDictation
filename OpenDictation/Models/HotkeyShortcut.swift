@@ -9,6 +9,10 @@ struct HotkeyShortcut: Codable, Equatable, Hashable, Identifiable {
     var carbonModifiers: UInt32
     /// Display string using standard macOS modifier symbols, e.g. "⌥ Space".
     var display: String
+    /// True when the trigger is a lone modifier key (fn, Right ⌥, …) held as
+    /// push-to-talk. These can't go through the Carbon hot key API — they're
+    /// detected with a flags-change monitor instead (see `ModifierKeyMonitor`).
+    var isModifierKey: Bool = false
 
     var id: String { display }
 
@@ -61,9 +65,60 @@ struct HotkeyShortcut: Codable, Equatable, Hashable, Identifiable {
 
     /// True when this is a lone character key with no modifiers — a footgun,
     /// since capturing it system-wide means it can't be typed normally.
-    /// Function keys are exempt: they make perfectly good bare shortcuts.
+    /// Function keys and lone modifier keys are exempt: they make perfectly
+    /// good bare shortcuts.
     var capturesABareTypingKey: Bool {
-        carbonModifiers & Self.allModifiers == 0 && !Self.functionKeyCodes.contains(keyCode)
+        !isModifierKey
+            && carbonModifiers & Self.allModifiers == 0
+            && !Self.functionKeyCodes.contains(keyCode)
+    }
+
+    // MARK: - Modifier-key (push-to-talk) triggers
+
+    /// Virtual key codes for the modifier keys usable as a lone push-to-talk
+    /// trigger. They can't be registered as Carbon hot keys, so they run
+    /// through `ModifierKeyMonitor` instead.
+    static let modifierKeyCodes: Set<UInt32> = [54, 55, 56, 58, 59, 60, 61, 62, 63]
+
+    /// The raw `NSEvent.modifierFlags` bit set while a given modifier key is
+    /// held. Left/right variants use device-dependent bits; fn uses the
+    /// device-independent function flag. `nil` for non-modifier key codes.
+    static func modifierKeyMask(for keyCode: UInt32) -> UInt? {
+        switch keyCode {
+        case 55: 0x08          // Left Command
+        case 54: 0x10          // Right Command
+        case 56: 0x02          // Left Shift
+        case 60: 0x04          // Right Shift
+        case 59: 0x01          // Left Control
+        case 62: 0x2000        // Right Control
+        case 58: 0x20          // Left Option
+        case 61: 0x40          // Right Option
+        case 63: 0x80_0000     // fn / Globe (device-independent .function)
+        default: nil
+        }
+    }
+
+    /// A readable label for a lone modifier key, e.g. "Right ⌥" or "fn".
+    static func modifierKeyName(for keyCode: UInt32) -> String? {
+        switch keyCode {
+        case 55: "Left ⌘"
+        case 54: "Right ⌘"
+        case 56: "Left ⇧"
+        case 60: "Right ⇧"
+        case 59: "Left ⌃"
+        case 62: "Right ⌃"
+        case 58: "Left ⌥"
+        case 61: "Right ⌥"
+        case 63: "fn"
+        default: nil
+        }
+    }
+
+    /// Builds a lone-modifier push-to-talk trigger, or `nil` if the key code
+    /// isn't a supported modifier.
+    static func modifierKey(keyCode: UInt32) -> HotkeyShortcut? {
+        guard let name = modifierKeyName(for: keyCode) else { return nil }
+        return HotkeyShortcut(keyCode: keyCode, carbonModifiers: 0, display: name, isModifierKey: true)
     }
 
     /// Virtual key codes for F1–F20.
@@ -82,4 +137,20 @@ struct HotkeyShortcut: Codable, Equatable, Hashable, Identifiable {
         103: "F11", 111: "F12", 105: "F13", 107: "F14", 113: "F15",
         106: "F16", 64: "F17", 79: "F18", 80: "F19", 90: "F20",
     ]
+}
+
+extension HotkeyShortcut {
+    private enum CodingKeys: String, CodingKey {
+        case keyCode, carbonModifiers, display, isModifierKey
+    }
+
+    /// Custom decode so shortcuts persisted before `isModifierKey` existed
+    /// still load (defaulting to a Carbon hot key) instead of being discarded.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        keyCode = try container.decode(UInt32.self, forKey: .keyCode)
+        carbonModifiers = try container.decode(UInt32.self, forKey: .carbonModifiers)
+        display = try container.decode(String.self, forKey: .display)
+        isModifierKey = try container.decodeIfPresent(Bool.self, forKey: .isModifierKey) ?? false
+    }
 }
