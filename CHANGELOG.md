@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+- Seamless dictation UX (pre-Local-AI polish, Wispr Flow-style):
+  - **Hold-to-talk** replaces the press-twice toggle. Holding the shortcut starts recording immediately (so the first word is never clipped); releasing it stops and transcribes. A hold shorter than 100 ms is treated as an accidental tap and discarded without an upload, and a release that arrives during the mic-permission gap is honored the moment recording begins. `HotkeyManager` now delivers both Carbon edges (`kEventHotKeyPressed` / `kEventHotKeyReleased`). The menu bar item keeps its click-to-toggle behavior.
+  - **Invisible recording HUD** replaces the floating transcript panel. A tiny capsule shows only the current phase — *Listening* (with a live mini-meter) and *Transcribing* — then dismisses itself; the transcript lands straight in the focused app. No preview, no Copy/Paste/Done buttons, no manual step. When Accessibility access is missing it degrades to a *Copied · press ⌘V* state instead of failing silently. `RecordingPopupView` retired in favor of `RecordingHUDView`.
+  - **Auto-insert on by default** (`autoPaste`): dictated text is inserted into the active app automatically, falling back to copy-only without Accessibility access.
+  - **Speech-tuned capture + deterministic transcription:** recording is now 16 kHz mono AAC at 32 kbps — the rate speech models resample to internally, so recognition is unchanged while the clip is ~3× smaller and the upload (the real latency cost) finishes sooner. Every request now decodes at temperature 0 for a literal transcript that also suppresses hallucinated filler on near-silence.
+
 ### Added
 - Paste-pipeline diagnostics: `PasteDiagnostics` traces every stage of the paste path (clipboard write → target capture → focus reactivation → CGEvent creation → each `CGEvent.post` → completion) with timestamp, thread, current frontmost app, whether Open Dictation is active, and whether the target is active — to os_log and, in debug builds, `~/Library/Logs/OpenDictation/paste.log`. A `--diagnose-paste` debug launch flag drives the real pipeline against a TextEdit document (two scenarios: target-frontmost and Open-Dictation-frontmost) and verifies the pasted marker actually lands. Both scenarios pass, confirming the pipeline is mechanically correct: every instruction executes, and the synthesized ⌘V reaches the target app in both cases.
 

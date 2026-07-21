@@ -31,6 +31,7 @@ Each milestone ends with: clean build, zero warnings, refactor pass, docs update
 
 - **Milestone 13 — Desktop app:** sidebar-driven management window (Home dashboard, History, Settings, placeholders for AI Profiles & Dictionary) alongside the menu-bar agent and floating recorder.
 - **Milestone 14 — Desktop Experience 2.0:** command palette (⌘K), redesigned sidebar and Home dashboard, rich filterable History, designed AI Profiles & Dictionary screens (preview data), window state restoration, Dock menu.
+- **Seamless dictation UX (pre-Local-AI):** hold-to-talk (press to start, release to stop; sub-100 ms taps discarded), an invisible recording HUD that replaces the transcript panel and auto-dismisses, auto-insert into the focused app on by default, and speech-tuned capture (16 kHz mono) with deterministic (temperature 0) transcription.
 
 ## Beyond that (ideas, not commitments)
 
