@@ -19,20 +19,20 @@ struct GeneralSettingsView: View {
                     Label("Dictation shortcut", systemImage: "keyboard")
                 }
             } footer: {
-                Text("Press \(settings.shortcut.display) anywhere on your Mac to start dictating, and again to stop.")
+                Text("Hold \(settings.shortcut.display) anywhere on your Mac to dictate, then release to insert. A quick tap is ignored.")
             }
 
             Section {
-                Toggle(isOn: $settings.autoCopy) {
-                    Label("Copy transcript automatically", systemImage: "doc.on.doc")
-                }
                 Toggle(isOn: $settings.autoPaste) {
-                    Label("Paste into the active app automatically", systemImage: "arrow.down.doc")
+                    Label("Insert into the active app automatically", systemImage: "text.insert")
+                }
+                Toggle(isOn: $settings.autoCopy) {
+                    Label("Copy transcript to the clipboard", systemImage: "doc.on.doc")
                 }
             } header: {
                 Text("After Transcription")
             } footer: {
-                Text("Automatic pasting needs Accessibility access — see the Permissions tab. The Copy and Paste buttons always remain available.")
+                Text("Inserting text needs Accessibility access — see the Permissions tab. Without it, your transcript is copied so you can paste with ⌘V.")
             }
 
             Section {

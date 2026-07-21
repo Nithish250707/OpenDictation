@@ -25,6 +25,9 @@ final class DictationController {
     /// (behind the mic-permission await), so the release is honored the moment
     /// recording actually begins.
     private var pendingRelease: ReleaseAction?
+    /// Hides the HUD after a terminal outcome so the user never has to dismiss
+    /// it — the essence of the invisible-recording experience.
+    private var autoDismissTask: Task<Void, Never>?
 
     var isRecording: Bool { recordingViewModel.state.isRecording }
 
@@ -49,6 +52,7 @@ final class DictationController {
         }
         hotkeyManager.register(shortcut: settings.shortcut)
         observeShortcutChanges()
+        observeStateForHUD()
     }
 
     // MARK: - Hold-to-talk
@@ -98,8 +102,51 @@ final class DictationController {
     }
 
     private func cancelDictation() {
+        autoDismissTask?.cancel()
+        autoDismissTask = nil
         recordingViewModel.cancelRecording()
         panelManager.hide()
+    }
+
+    // MARK: - HUD self-dismissal
+
+    /// Watches the recording state so the HUD hides itself once a session
+    /// reaches a terminal outcome — the whole flow needs no clicks. Active
+    /// phases cancel any pending dismissal; terminal phases schedule one.
+    private func observeStateForHUD() {
+        withObservationTracking {
+            _ = recordingViewModel.state
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.hudStateChanged()
+                self.observeStateForHUD()
+            }
+        }
+    }
+
+    private func hudStateChanged() {
+        switch recordingViewModel.state {
+        case .idle, .recording, .transcribing:
+            autoDismissTask?.cancel()
+            autoDismissTask = nil
+        case .transcript:
+            // Inserted transcripts vanish quickly; a copy-only result lingers
+            // long enough for the user to notice and press ⌘V.
+            scheduleAutoDismiss(after: recordingViewModel.accessibilityGranted ? .milliseconds(700) : .seconds(3))
+        case .failed, .permissionDenied:
+            // Give the user time to read the reason before it disappears.
+            scheduleAutoDismiss(after: .seconds(4))
+        }
+    }
+
+    private func scheduleAutoDismiss(after delay: Duration) {
+        autoDismissTask?.cancel()
+        autoDismissTask = Task { [weak self] in
+            try? await Task.sleep(for: delay)
+            guard let self, !Task.isCancelled else { return }
+            self.dismiss()
+        }
     }
 
     /// Single entry point for the menu bar item (a click can't hold).
@@ -120,15 +167,15 @@ final class DictationController {
     func dismiss() {
         holdStartedAt = nil
         pendingRelease = nil
+        autoDismissTask?.cancel()
+        autoDismissTask = nil
         panelManager.hide()
         recordingViewModel.reset()
     }
 
     private func beginDictation() {
         panelManager.show {
-            RecordingPopupView(viewModel: recordingViewModel, settings: settings) { [weak self] in
-                self?.dismiss()
-            }
+            RecordingHUDView(viewModel: recordingViewModel)
         }
         Task {
             await recordingViewModel.startRecording()

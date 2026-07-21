@@ -20,6 +20,9 @@ struct RecordingViewModelTests {
             apiKeys: [String: String] = ["mock": "sk-test"]
         ) {
             settings.providerID = provider.id
+            // Auto-insert now ships on by default; pin it off here so each
+            // paste/copy test opts into the behavior it means to exercise.
+            settings.autoPaste = false
             let transcription = TranscriptionService(
                 registry: ProviderRegistry(providers: [provider]),
                 keyStore: InMemoryAPIKeyStore(keys: apiKeys),

@@ -52,4 +52,24 @@ enum AppError: LocalizedError, Equatable {
             message
         }
     }
+
+    /// A terse, capsule-sized summary for the recording HUD, where the full
+    /// `errorDescription` sentence would be too long to read at a glance.
+    var hudSummary: String {
+        switch self {
+        case .microphonePermissionDenied: "Microphone access needed"
+        case .audioRecordingFailed: "Recording failed"
+        case .audioFileUnreadable: "Recording unreadable"
+        case .accessibilityPermissionDenied: "Accessibility access needed"
+        case .pasteFailed: "Couldn't paste — copied instead"
+        case .missingAPIKey: "Add your API key in Settings"
+        case .invalidAPIKey: "API key rejected — check Settings"
+        case .unsupportedAudio: "Audio format not accepted"
+        case .rateLimited: "Service busy — try again"
+        case .networkUnavailable: "No internet connection"
+        case .requestTimedOut: "Request timed out"
+        case .serverError: "Service error — try again"
+        case .providerError: "Transcription failed"
+        }
+    }
 }
