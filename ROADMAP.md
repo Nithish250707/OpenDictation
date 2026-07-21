@@ -22,7 +22,7 @@ Each milestone ends with: clean build, zero warnings, refactor pass, docs update
 - ~~App icon~~ ✅ shipped in Milestone 11
 - README screenshots/GIF
 - Hotkey-conflict feedback in Settings (registration failures are currently log-only)
-- Free-form shortcut recorder (v1 ships curated presets)
+- ~~Free-form shortcut recorder~~ ✅ shipped (record any key/combination; presets kept as quick picks)
 - History retention limit and a "don't save history" toggle
 - ~~Auto-updates + DMG pipeline~~ ✅ shipped in Milestone 12 (Sparkle, GitHub Releases feed)
 - Notarized release builds — tooling ready (`Scripts/release.sh`); needs a Developer ID certificate

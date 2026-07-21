@@ -24,4 +24,45 @@ struct HotkeyShortcutTests {
             #expect(decoded == preset)
         }
     }
+
+    // MARK: - Free-form recorder helpers
+
+    @Test func modifierSymbolsUseCanonicalOrder() {
+        #expect(HotkeyShortcut.modifierSymbols(0) == "")
+        #expect(HotkeyShortcut.modifierSymbols(HotkeyShortcut.optionMask) == "⌥")
+        // Control, Option, Shift, Command — regardless of the mask's bit order.
+        let all = HotkeyShortcut.commandMask | HotkeyShortcut.shiftMask
+            | HotkeyShortcut.optionMask | HotkeyShortcut.controlMask
+        #expect(HotkeyShortcut.modifierSymbols(all) == "⌃⌥⇧⌘")
+        #expect(HotkeyShortcut.modifierSymbols(HotkeyShortcut.shiftMask | HotkeyShortcut.commandMask) == "⇧⌘")
+    }
+
+    @Test func specialKeyNamesCoverKeysAndFunctionRow() {
+        #expect(HotkeyShortcut.specialKeyName(for: 49) == "Space")
+        #expect(HotkeyShortcut.specialKeyName(for: 96) == "F5")
+        #expect(HotkeyShortcut.specialKeyName(for: 126) == "↑")
+        // An ordinary character key has no special name; its label comes from
+        // the keyboard layout instead.
+        #expect(HotkeyShortcut.specialKeyName(for: 2) == nil)
+    }
+
+    @Test func makeDisplayComposesModifiersAndKey() {
+        #expect(HotkeyShortcut.makeDisplay(carbonModifiers: HotkeyShortcut.optionMask, keyName: "Space") == "⌥ Space")
+        #expect(HotkeyShortcut.makeDisplay(carbonModifiers: 0, keyName: "F5") == "F5")
+        // Composed presets match their hand-written display strings.
+        for preset in HotkeyShortcut.presets {
+            let keyName = HotkeyShortcut.specialKeyName(for: preset.keyCode) ?? ""
+            if !keyName.isEmpty {
+                #expect(HotkeyShortcut.makeDisplay(carbonModifiers: preset.carbonModifiers, keyName: keyName) == preset.display)
+            }
+        }
+    }
+
+    @Test func bareTypingKeyIsFlaggedButFunctionAndModifiedKeysAreNot() {
+        let bareLetter = HotkeyShortcut(keyCode: 2, carbonModifiers: 0, display: "D")
+        let bareFunction = HotkeyShortcut(keyCode: 96, carbonModifiers: 0, display: "F5")
+        #expect(bareLetter.capturesABareTypingKey)
+        #expect(!bareFunction.capturesABareTypingKey)
+        #expect(!HotkeyShortcut.optionSpace.capturesABareTypingKey)
+    }
 }

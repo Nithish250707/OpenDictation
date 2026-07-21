@@ -11,15 +11,33 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Picker(selection: $settings.shortcut) {
-                    ForEach(HotkeyShortcut.presets) { preset in
-                        Text(preset.display).tag(preset)
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        ShortcutRecorder(shortcut: $settings.shortcut)
+                        Menu {
+                            ForEach(HotkeyShortcut.presets) { preset in
+                                Button(preset.display) { settings.shortcut = preset }
+                            }
+                            Divider()
+                            Button("Restore Default (⌥ Space)") { settings.shortcut = .optionSpace }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                        }
+                        .menuStyle(.borderlessButton)
+                        .fixedSize()
+                        .help("Quick picks and restore default")
                     }
                 } label: {
                     Label("Dictation shortcut", systemImage: "keyboard")
                 }
             } footer: {
-                Text("Hold \(settings.shortcut.display) anywhere on your Mac to dictate, then release to insert. A quick tap is ignored.")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Click the shortcut, then press any key or combination you like — a single key, a function key, or modifiers plus a key. Hold it anywhere on your Mac to dictate, then release to insert; a quick tap is ignored.")
+                    if settings.shortcut.capturesABareTypingKey {
+                        Label("\(settings.shortcut.display) has no modifiers, so it's captured system-wide — you won't be able to type it normally. A function key or a modifier combo is safer.", systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
+                }
             }
 
             Section {
