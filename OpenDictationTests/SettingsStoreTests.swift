@@ -12,7 +12,7 @@ struct SettingsStoreTests {
         #expect(store.languageCode == nil)
         #expect(store.shortcut == .optionSpace)
         #expect(store.autoCopy)
-        #expect(!store.autoPaste)
+        #expect(store.autoPaste)
         #expect(store.panelSize == .standard)
         #expect(store.panelOpacity == 1.0)
         #expect(store.panelAppearance == .system)

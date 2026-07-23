@@ -112,6 +112,21 @@ final class RecordingViewModel {
         Task { await transcribe(audioFileURL: url, duration: duration) }
     }
 
+    /// Aborts an in-progress recording without transcribing. Used when a
+    /// hold-to-talk press is released too quickly to be intentional: the
+    /// recorder is stopped and its temporary file deleted so an accidental tap
+    /// never leaks audio to disk or triggers an upload.
+    func cancelRecording() {
+        guard case .recording = state else { return }
+        stopMetering()
+        if let url = audio.stopRecording() {
+            deleteAudioFile(at: url)
+        }
+        state = .idle
+        elapsed = 0
+        levels = Array(repeating: 0, count: Self.waveformBarCount)
+    }
+
     // MARK: - Transcription
 
     func retry() {

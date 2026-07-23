@@ -11,28 +11,58 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Picker(selection: $settings.shortcut) {
-                    ForEach(HotkeyShortcut.presets) { preset in
-                        Text(preset.display).tag(preset)
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        ShortcutRecorder(shortcut: $settings.shortcut)
+                        Menu {
+                            ForEach(HotkeyShortcut.presets) { preset in
+                                Button(preset.display) { settings.shortcut = preset }
+                            }
+                            Section("Hold a modifier (push-to-talk)") {
+                                if let rightOption = HotkeyShortcut.modifierKey(keyCode: 61) {
+                                    Button(rightOption.display) { settings.shortcut = rightOption }
+                                }
+                                if let globe = HotkeyShortcut.modifierKey(keyCode: 63) {
+                                    Button(globe.display) { settings.shortcut = globe }
+                                }
+                            }
+                            Divider()
+                            Button("Restore Default (⌥ Space)") { settings.shortcut = .optionSpace }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                        }
+                        .menuStyle(.borderlessButton)
+                        .fixedSize()
+                        .help("Quick picks and restore default")
                     }
                 } label: {
                     Label("Dictation shortcut", systemImage: "keyboard")
                 }
             } footer: {
-                Text("Press \(settings.shortcut.display) anywhere on your Mac to start dictating, and again to stop.")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Click the shortcut, then press what you like — a single key, a function key, modifiers plus a key, or a lone modifier held on its own (fn, Right ⌥…). Hold it anywhere on your Mac to dictate, then release to insert; a quick tap is ignored.")
+                    if settings.shortcut.capturesABareTypingKey {
+                        Label("\(settings.shortcut.display) has no modifiers, so it's captured system-wide — you won't be able to type it normally. A function key, a lone modifier, or a combo is safer.", systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
+                    if settings.shortcut.isModifierKey {
+                        Label("A lone modifier trigger (\(settings.shortcut.display)) needs Accessibility access to be detected — grant it in the Permissions tab.", systemImage: "lock.shield")
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
 
             Section {
-                Toggle(isOn: $settings.autoCopy) {
-                    Label("Copy transcript automatically", systemImage: "doc.on.doc")
-                }
                 Toggle(isOn: $settings.autoPaste) {
-                    Label("Paste into the active app automatically", systemImage: "arrow.down.doc")
+                    Label("Insert into the active app automatically", systemImage: "text.insert")
+                }
+                Toggle(isOn: $settings.autoCopy) {
+                    Label("Copy transcript to the clipboard", systemImage: "doc.on.doc")
                 }
             } header: {
                 Text("After Transcription")
             } footer: {
-                Text("Automatic pasting needs Accessibility access — see the Permissions tab. The Copy and Paste buttons always remain available.")
+                Text("Inserting text needs Accessibility access — see the Permissions tab. Without it, your transcript is copied so you can paste with ⌘V.")
             }
 
             Section {

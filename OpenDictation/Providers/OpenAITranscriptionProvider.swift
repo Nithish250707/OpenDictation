@@ -73,10 +73,11 @@ struct OpenAITranscriptionProvider: TranscriptionProvider {
         var parts: [MultipartFormEncoder.Part] = [
             .field(name: "model", value: configuration.model),
             .field(name: "response_format", value: "json"),
+            .field(name: "temperature", value: String(configuration.temperature)),
             .file(name: "file", filename: filename, contentType: "audio/mp4", data: audioData),
         ]
         if let language = configuration.language {
-            parts.insert(.field(name: "language", value: language), at: 2)
+            parts.insert(.field(name: "language", value: language), at: 3)
         }
 
         var request = URLRequest(url: endpoint)

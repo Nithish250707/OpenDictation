@@ -78,7 +78,10 @@ final class SettingsStore {
             .flatMap { try? JSONDecoder().decode(HotkeyShortcut.self, from: $0) }
             ?? .optionSpace
         autoCopy = defaults.object(forKey: Key.autoCopy) as? Bool ?? true
-        autoPaste = defaults.object(forKey: Key.autoPaste) as? Bool ?? false
+        // Auto-insert is on by default: dictated text should land straight in
+        // the active app (the Wispr Flow-style experience). It degrades to
+        // copy-only when Accessibility access is missing.
+        autoPaste = defaults.object(forKey: Key.autoPaste) as? Bool ?? true
         panelSize = defaults.string(forKey: Key.panelSize).flatMap(PanelSize.init(rawValue:)) ?? .standard
         panelOpacity = defaults.object(forKey: Key.panelOpacity) as? Double ?? 1.0
         panelAppearance = defaults.string(forKey: Key.panelAppearance)

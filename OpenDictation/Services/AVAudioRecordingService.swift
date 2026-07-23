@@ -2,9 +2,11 @@ import AVFoundation
 
 /// `AVAudioRecorder`-backed implementation of `AudioRecording`.
 ///
-/// Records mono AAC (.m4a) into the user's temporary directory — small enough
-/// to upload quickly, and never persisted anywhere permanent. Metering is
-/// enabled so the UI can render a live waveform.
+/// Records mono AAC (.m4a) at 16 kHz into the user's temporary directory. That
+/// sample rate is exactly what speech-to-text models operate on internally, so
+/// it costs no accuracy while making the file ~3× smaller than CD-rate audio —
+/// a smaller upload is a faster transcription. The clip is never persisted
+/// anywhere permanent. Metering is enabled so the UI can render a live waveform.
 @MainActor
 final class AVAudioRecordingService: AudioRecording {
     private var recorder: AVAudioRecorder?
@@ -37,9 +39,12 @@ final class AVAudioRecordingService: AudioRecording {
 
         let settings: [String: Any] = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44_100.0,
+            AVSampleRateKey: 16_000.0,
             AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+            // 32 kbps is transparent for 16 kHz mono speech and keeps the clip
+            // tiny, so the upload — the real latency cost — finishes sooner.
+            AVEncoderBitRateKey: 32_000,
         ]
 
         let recorder = try AVAudioRecorder(url: url, settings: settings)

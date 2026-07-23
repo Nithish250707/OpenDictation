@@ -22,7 +22,7 @@ Each milestone ends with: clean build, zero warnings, refactor pass, docs update
 - ~~App icon~~ ✅ shipped in Milestone 11
 - README screenshots/GIF
 - Hotkey-conflict feedback in Settings (registration failures are currently log-only)
-- Free-form shortcut recorder (v1 ships curated presets)
+- ~~Free-form shortcut recorder~~ ✅ shipped (record any key/combination; presets kept as quick picks)
 - History retention limit and a "don't save history" toggle
 - ~~Auto-updates + DMG pipeline~~ ✅ shipped in Milestone 12 (Sparkle, GitHub Releases feed)
 - Notarized release builds — tooling ready (`Scripts/release.sh`); needs a Developer ID certificate
@@ -31,6 +31,7 @@ Each milestone ends with: clean build, zero warnings, refactor pass, docs update
 
 - **Milestone 13 — Desktop app:** sidebar-driven management window (Home dashboard, History, Settings, placeholders for AI Profiles & Dictionary) alongside the menu-bar agent and floating recorder.
 - **Milestone 14 — Desktop Experience 2.0:** command palette (⌘K), redesigned sidebar and Home dashboard, rich filterable History, designed AI Profiles & Dictionary screens (preview data), window state restoration, Dock menu.
+- **Seamless dictation UX (pre-Local-AI):** hold-to-talk (press to start, release to stop; sub-100 ms taps discarded), an invisible recording HUD that replaces the transcript panel and auto-dismisses, auto-insert into the focused app on by default, and speech-tuned capture (16 kHz mono) with deterministic (temperature 0) transcription.
 
 ## Beyond that (ideas, not commitments)
 
