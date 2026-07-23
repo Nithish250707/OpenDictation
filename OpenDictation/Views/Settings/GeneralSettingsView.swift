@@ -7,6 +7,7 @@ struct GeneralSettingsView: View {
     let updater: any UpdateManaging
 
     @State private var loginItemErrorMessage: String?
+    @State private var launchAtLogin = false
 
     var body: some View {
         Form {
@@ -98,6 +99,7 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .animation(.default, value: loginItemErrorMessage)
+        .onAppear { launchAtLogin = loginItems.isEnabled }
     }
 
     private var automaticUpdatesBinding: Binding<Bool> {
@@ -110,14 +112,21 @@ struct GeneralSettingsView: View {
 
     private var launchAtLoginBinding: Binding<Bool> {
         Binding {
-            loginItems.isEnabled
+            launchAtLogin
         } set: { enabled in
-            do {
-                try loginItems.setEnabled(enabled)
-                loginItemErrorMessage = nil
-            } catch {
-                loginItemErrorMessage = "macOS declined the change. Try again, or manage it in System Settings → General → Login Items."
-                Log.app.error("Login item change failed: \(error.localizedDescription)")
+            // Flip the toggle immediately (responsive UI), then apply the
+            // change off the main thread so a slow SMAppService call can't
+            // freeze the window or menu bar.
+            launchAtLogin = enabled
+            Task {
+                do {
+                    try await loginItems.setEnabled(enabled)
+                    loginItemErrorMessage = nil
+                } catch {
+                    loginItemErrorMessage = "macOS declined the change. Try again, or manage it in System Settings → General → Login Items."
+                    launchAtLogin = loginItems.isEnabled // revert to the real state
+                    Log.app.error("Login item change failed: \(error.localizedDescription)")
+                }
             }
         }
     }

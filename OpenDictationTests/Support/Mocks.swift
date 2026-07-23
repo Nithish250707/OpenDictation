@@ -130,7 +130,7 @@ final class MockLoginItemManager: LoginItemManaging {
     var isEnabled = false
     var nextError: Error?
 
-    func setEnabled(_ enabled: Bool) throws {
+    func setEnabled(_ enabled: Bool) async throws {
         if let nextError { throw nextError }
         isEnabled = enabled
     }
